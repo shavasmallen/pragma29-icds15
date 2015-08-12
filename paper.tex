@@ -32,7 +32,7 @@ Nadya Williams\\
 
 \maketitle
 \begin{abstract}
-The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community of individuals and institutions from around the Pacific Rim that actively collaborate to enable scientific expeditions in areas like biodiversity and lake ecology.  Over the past X years, the technology focus for PRAGMA partners has shifted to cloud and software defined networking as enabling technologies.  During PRAGMA 27, the Resources Working group discussed rebooting the persistent PRAGMA Testbed as a way for institutions to contribute and use shared resources, leveraging technologies such as PRAGMA Boot, Personal Cloud Controller (PCC), and overlay networks.  To make PRAGMA resource sharing easier, a lightweight scheduler was proposed and discussed as a way to enable access to the resources and to manage resource reservations.  This short paper discusses the design process and initial prototype of a simple cloud scheduler for PRAGMA.  
+The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community of individuals and sites from around the Pacific Rim that actively collaborate to enable scientific expeditions in areas like biodiversity and lake ecology.  Over the past X years, the technology focus for PRAGMA partners has shifted to cloud and software defined networking as enabling technologies.  During PRAGMA 27, the Resources Working group discussed rebooting the persistent PRAGMA Testbed as a way for sites to contribute and use shared resources, leveraging technologies such as PRAGMA Boot, Personal Cloud Controller (PCC), and overlay networks.  To make PRAGMA resource sharing easier, a lightweight scheduler was proposed and discussed as a way to enable access to the resources and to manage resource reservations.  This short paper discusses the design process and initial prototype of a simple cloud scheduler for PRAGMA.  
 
 %add contribute and leverage shared resources
 \end{abstract}
@@ -48,7 +48,42 @@ The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community
 
 \section{Introduction}
 
-some text~\cite{pragmaWeb}
+The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community of individuals and sites from around the Pacific Rim that actively collaborate to enable scientific expeditions in areas like computational chemistry, telescience, biodiversity, and lake ecology~\cite{pragmaWeb}.  Founded in 2002, PRAGMA originally sought to advance the use of grid technologies in applications among a community of investigators working with leading institution sites around the Pacific Rim~\cite{pragmaReport2004}.  This included the deployment of a shared PRAGMA Grid testbed where participating sites could contribute and use resources as needed to develop and test new middleware and conduct scientific experiments.  Testbed sites needed to install at a minimum Globus~\cite{globus} and a local HPC job scheduler as well as other optional software such as MPICH-G2~\cite{mpichg2} and Ninf-G~\cite{ninfg}.  By November 2006, nineteen site in thirteen countries were part of the testbed, with a total of 662 CPUs, nearly 1 terabyte of memory, and 7.3 terabytes of online storage~\cite{pragmaReport2006}.  In 2009, the testbed had grown to twenty-seven sites in fifteen countries with a total of 1008 CPUs, more than 1.3 terabytes of memory, and over 24.7 terabytes of online storage.  However by 2011, the number of sites started to decline and maintaining the numerous and complex middleware and scientific applications at a local site required significant people effort and expertise.  Since PRAGMA participants often have varying levels of of funding, staff, and expertise, PRAGMA started to shift away from grid towards cloud technologies to simplify the infrastructure and lower the amount of effort an site would need to participate in the testbed.  
+
+The first phase of the PRAGMA cloud testbed started with three sites and focused around the creation of application specific virtual machines and making them portable to  different cloud hosting environments like Rocks~\cite{rocks}, OpenNebula~\cite{opennebula}, and Eucalyptus~\cite{eucalyptus}.
+One early example was an AutoDoc~\cite{autodock} virtual machine created for the Avian Flu research team in 2011~\cite{pragmaReport2011}.   By 2012, the cloud testbed had ten sites with a total of 367 CPUs, 2.5 terabytes of memory, and 657 terabytes of online storage.  To make it easier for users to assemble a multi-node virtual environment for running their scientific experiments, PRAGMA shifted its  focus to the creation and management of virtual clusters in 2013.  The following technologies have been explored to facilitate both the operation and use of virtual clusters on the PRAGMA cloud testbed.
+
+\textbf{pragma\_boot:}  Rather than requiring a single cloud system, PRAGMA sites are free to  deploy any cloud tool that best fits their expertise. However, enabling a virtual cluster to be ported to different cloud systems is a complex problem and requires tooling to retain the cluster relationship between head and worker nodes as well as software configurations.  In 2013, three pilot sites (UCSD, AIST, NCHC) developed an automated virtual cluster porting script and demonstrated the same virtual cluster image being booted in three different Cloud hosting environments, including Rocks/Xen, OpenNebula/KVM, and Amazon EC2.  Based on those experiences, the porting script was redesigned and reimplemented as \textit{pragma\_boot} and "drivers" were implemented for both Rocks and OpenNebula.
+
+\textbf{Personal Cloud Controller:}  To provide users with an easy-to-use interface for managing the life cycle of their virtual clusters, a Personal Cloud Controller (PCC) tool was started in 2014. This lightweight tool was designed to manage startup,  status monitoring, and shutdown  of a virtual cluster and was built on top of pragma\_boot and a well-known resource management tool called HTCondor~\cite{condor}.   PCC also provided an option to create a multi-site virtual cluster leveraging a network overlay tool called IPOP~\cite{ipop} for the private network.
+
+\textbf{Software-defined Networking}:   PRAGMA began investigating software-defined networking technologies like OpenFlow~\cite{openflow} in 2013 as a way to create a private network between multi-site virtual clusters and to protect access to sensitive datasets~\cite{pragmaReport2013}.  PRAGMA then created the Experimental Network Testbed (PRAGMA-ENT) as a breakable, international testbed for use by PRAGMA researchers and collaborators.  In 2014, The PRAGMA-ENT team worked to create an international reliable direct point-to-point data Layer-2 connection with network engineers and developed AutoVFlow~\cite{autovflow} to provision private virtual network slices for each application, user, and/or project~\cite{pragmaReport2014}.  
+
+In late 2014 during the PRAGMA27 workshop, a lightweight scheduler was proposed to coordinate access to the above technologies.  The next section discusses the general requirements of the cloud scheduler and Section~\ref{Sec:Design} discusses the design options that were considered and why a simple calendar solution was selected.  A summary of calendar systems that were considered is provided in Section~\ref{Sec:Calendars}.  Section~\ref{Sec:Pilot} discusses our early implementation with one of the calendar systems called Booked and Section~\ref{Sec:Conclusions} concludes with our planned future work.  
+
+% NOTES AND SNIPPET TEXT THAT WAS NO LONGER RELEVANT
+%In 2012, a \textit{vm-deploy} script was developed to automate the process of launching a virtual machine from distributed Gfarm filesystem~\cite{gfarm) to an OpenNebula deployment.  , which later became \textit{pragma\_boot} in 2013, to automate the VM porting process from one cloud deployment to another~\cite{pragmaReport2012,pragmaReport2013}.  
+
+%In Phase 2, PRAGMA started using Gfarm~\cite{gfarm} as a mechanism to distribute and migrate VMs to different sites~\cite{pragmaReport2012} and in Phase 3 grew the cloud testbed to ten sites in 2012 with a total of 367 CPUs, 2.5 terabytes of memory, and 657 terabytes of online storage.   To facilitate the creation of application VMs, a web-based, easy-to-use user interface was developed for the Ezilla tool~\cite{ezilla} so that users can drag-n-drop the applications they need into their own custom VM image~\cite{pragmaReport2013}.  
+
+% 2005-2006: 19 sites in 13 countries, with a total of 662 CPUs, near- ly 1 terabyte of memory, and 7.3 terabytes of online storage.
+% 2006-2007: The PRAGMA testbed grew from 19 sites in 13 countries to 26 sites in 14 countries, with a total of 726 CPUs, more than half a terabyte of memory, and 13.2 terabytes of online storage
+% 2007-2008: During this last year, the PRAGMA grid grew from 26 sites in 14 countries/regions to 30 sites in 17 countries/regions, with a total of 1109 CPUs, more than one terabyte of memory, and 26.7 terabytes of online storage.
+% 2008-2009: During the last year, the PRAGMA Grid has grown to 27 sites in 15 countries/regions with total of 1008 CPUs, more than 1.3 ter- abytes of memory, and over 24.7 terabytes of online storage.
+% 2009-2010:  Currently, the PRAGMA Grid has 24 sites in 16 countries/regions which provides a total of 1022 CPUs, more than 1.3 terabytes of memory, and over 24.8 terabytes of online storage. 
+% 2010-2011: Since PRAGMA 17 (October 2009, Hanoi), the Resources Working Group has decided to migrate from grid to cloud through experimentation with virtualization technologies
+% 2011-2012: At PRAGMA 20 (March 2011, Hong Kong), the three pilot sites demonstrated this Phase 1 experiment and findings. These results have excited many PRAGMA sites and motivated them to join this effort. Since then, seven more sites have set up VM hosting services and migrated the three application VMs. These sites are: Indiana University (IU), ASTI, MIMOS, LZU, Osaka University, CNIC and University of Hyderabad (UoHyd).
+% 2012-2013: Our progress in porting (a form of sharing) VM images has taken place in three phases. In the first phase, (completed in early 2011), we successfully demonstrated a manual port of three application VM images among three different VM hosting environments (i.e., a pairing of a VM hosting platform with VM hosting managing software, e.g. Open Nebula). Phase 2 began at PRAGMA 20 (March 2011, Hong Kong), where, based on what we learned from the phase 1 experiments, we designed a PRAGMA cloud infrastructure to use Gfarm for VM image depository and sharing and to automate VM deployment process on various virtualization platforms that make up the PRAGMA multi-cloud. At PRAGMA 21 (October 2011, Japan), we demonstrated the automated deployment of a GEO Grid VM image from Gfarm to three pilot sites?AIST, NCHC and UCSD.  After PRAGMA 21, we started Phase 3 of the VM sharing experiment with four objectives: 1) to expand PRAGMA cloud resources; 2) to enhance Gfarm functionality and performance; 3) to author and run more application VMs and 4) to develop an easy-to-use user interface for creating VM images.
+% 2013-2014: 
+
+
+\section{Scheduler Requirements}
+
+Sites willing to participate will have to install a PRAGMA Package - a very small set of components.
+Users can request access to resources similar to requesting a room (i.e., a room reservation system)
+PCC would be used to automatically start and monitor user's VMs slash VC via pragma\_boot up at sites 
+Only support 10s of users
+
 
 Repeat longer version of text in abstract with appropriate citations.
 
@@ -58,19 +93,23 @@ Discuss requirements and technologies like pragma boot, etc.
 
 % view available resources and scientific application virtual machines
 \section{Scheduler Design}
+\label{Sec:Design}
 
 Discuss process of narrowing down scheduler design from meeting ideas 
 (e.g., batch scheduler, Grid 5000, GENI, Google doc, DHCP leases).
 
 \section{Calendaring systems}
+\label{Sec:Calendars}
 
 Discuss selection of Booked.
 
 \section{Cloud Scheduler Pilot}
+\label{Sec:Pilot}
 
 Discuss creation of Cloud Scheduler Pilot.
 
 \section{Conclusions and Future Work}
+\label{Sec:Conclusions}
 
 Some interesting conclusion.
 
