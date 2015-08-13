@@ -32,7 +32,7 @@ Nadya Williams\\
 
 \maketitle
 \begin{abstract}
-The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community of individuals and sites from around the Pacific Rim that actively collaborate to enable scientific expeditions in areas like biodiversity and lake ecology.  Over the past X years, the technology focus for PRAGMA partners has shifted to cloud and software defined networking as enabling technologies.  During PRAGMA 27, the Resources Working group discussed rebooting the persistent PRAGMA Testbed as a way for sites to contribute and use shared resources, leveraging technologies such as PRAGMA Boot, Personal Cloud Controller (PCC), and overlay networks.  To make PRAGMA resource sharing easier, a lightweight scheduler was proposed and discussed as a way to enable access to the resources and to manage resource reservations.  This short paper discusses the design process and initial prototype of a simple cloud scheduler for PRAGMA.  
+The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community of individuals and sites from around the Pacific Rim that actively collaborate to enable scientific expeditions in areas like biodiversity and lake ecology.  Over the past four years, the technology focus for PRAGMA partners has shifted to cloud and software defined networking as enabling technologies.  During PRAGMA 27, the Resources Working group discussed rebooting the persistent PRAGMA Testbed as a way for sites to contribute and use shared resources, leveraging technologies such as PRAGMA Boot, Personal Cloud Controller (PCC), and overlay networks.  To make PRAGMA resource sharing easier, a lightweight scheduler was proposed and discussed as a way to enable access to the resources and to manage resource reservations.  This short paper discusses the design process and initial prototype of a simple cloud scheduler for PRAGMA.  
 
 %add contribute and leverage shared resources
 \end{abstract}
@@ -51,7 +51,7 @@ The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community
 The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community of individuals and sites from around the Pacific Rim that actively collaborate to enable scientific expeditions in areas like computational chemistry, telescience, biodiversity, and lake ecology~\cite{pragmaWeb}.  Founded in 2002, PRAGMA originally sought to advance the use of grid technologies in applications among a community of investigators working with leading institution sites around the Pacific Rim~\cite{pragmaReport2004}.  This included the deployment of a shared PRAGMA Grid testbed where participating sites could contribute and use resources as needed to develop and test new middleware and conduct scientific experiments.  Testbed sites needed to install at a minimum Globus~\cite{globus} and a local HPC job scheduler as well as other optional software such as MPICH-G2~\cite{mpichg2} and Ninf-G~\cite{ninfg}.  By November 2006, nineteen site in thirteen countries were part of the testbed, with a total of 662 CPUs, nearly 1 terabyte of memory, and 7.3 terabytes of online storage~\cite{pragmaReport2006}.  In 2009, the testbed had grown to twenty-seven sites in fifteen countries with a total of 1008 CPUs, more than 1.3 terabytes of memory, and over 24.7 terabytes of online storage.  However by 2011, the number of sites started to decline and maintaining the numerous and complex middleware and scientific applications at a local site required significant people effort and expertise.  Since PRAGMA participants often have varying levels of of funding, staff, and expertise, PRAGMA started to shift away from grid towards cloud technologies to simplify the infrastructure and lower the amount of effort an site would need to participate in the testbed.  
 
 The first phase of the PRAGMA cloud testbed started with three sites and focused around the creation of application specific virtual machines and making them portable to  different cloud hosting environments like Rocks~\cite{rocks}, OpenNebula~\cite{opennebula}, and Eucalyptus~\cite{eucalyptus}.
-One early example was an AutoDoc~\cite{autodock} virtual machine created for the Avian Flu research team in 2011~\cite{pragmaReport2011}.   By 2012, the cloud testbed had ten sites with a total of 367 CPUs, 2.5 terabytes of memory, and 657 terabytes of online storage.  To make it easier for users to assemble a multi-node virtual environment for running their scientific experiments, PRAGMA shifted its  focus to the creation and management of virtual clusters in 2013.  The following technologies have been explored to facilitate both the operation and use of virtual clusters on the PRAGMA cloud testbed.
+One early example was an AutoDoc~\cite{autodock} virtual machine created for the Avian Flu research team in 2011~\cite{pragmaReport2011}.   By 2012, the cloud testbed had ten sites with a total of 367 CPUs, 2.5 terabytes of memory, and 657 terabytes of online storage.  In addition to the previously managed cloud tools, To make it easier for users to assemble a multi-node virtual environment for running their scientific experiments, PRAGMA shifted its  focus to the creation and management of virtual clusters in 2013.  The following technologies have been explored to facilitate both the operation and use of virtual clusters on the PRAGMA cloud testbed.
 
 \textbf{pragma\_boot:}  Rather than requiring a single cloud system, PRAGMA sites are free to  deploy any cloud tool that best fits their expertise. However, enabling a virtual cluster to be ported to different cloud systems is a complex problem and requires tooling to retain the cluster relationship between head and worker nodes as well as software configurations.  In 2013, three pilot sites (UCSD, AIST, NCHC) developed an automated virtual cluster porting script and demonstrated the same virtual cluster image being booted in three different Cloud hosting environments, including Rocks/Xen, OpenNebula/KVM, and Amazon EC2.  Based on those experiences, the porting script was redesigned and reimplemented as \textit{pragma\_boot} and "drivers" were implemented for both Rocks and OpenNebula.
 
@@ -59,7 +59,7 @@ One early example was an AutoDoc~\cite{autodock} virtual machine created for the
 
 \textbf{Software-defined Networking}:   PRAGMA began investigating software-defined networking technologies like OpenFlow~\cite{openflow} in 2013 as a way to create a private network between multi-site virtual clusters and to protect access to sensitive datasets~\cite{pragmaReport2013}.  PRAGMA then created the Experimental Network Testbed (PRAGMA-ENT) as a breakable, international testbed for use by PRAGMA researchers and collaborators.  In 2014, The PRAGMA-ENT team worked to create an international reliable direct point-to-point data Layer-2 connection with network engineers and developed AutoVFlow~\cite{autovflow} to provision private virtual network slices for each application, user, and/or project~\cite{pragmaReport2014}.  
 
-In late 2014 during the PRAGMA27 workshop, a lightweight scheduler was proposed to coordinate access to the above technologies.  The next section discusses the general requirements of the cloud scheduler and Section~\ref{Sec:Design} discusses the design options that were considered and why a simple calendar solution was selected.  A summary of calendar systems that were considered is provided in Section~\ref{Sec:Calendars}.  Section~\ref{Sec:Pilot} discusses our early implementation with one of the calendar systems called Booked and Section~\ref{Sec:Conclusions} concludes with our planned future work.  
+In late 2014 during the PRAGMA27 workshop, a lightweight scheduler was proposed to coordinate running on the different cloud deployments and leverage the above technologies.  The next section discusses the general requirements of the cloud scheduler and Section~\ref{Sec:Design} discusses the design options that were considered and why a simple calendar solution was selected.  A summary of calendar systems that were considered is provided in Section~\ref{Sec:Calendars}.  Section~\ref{Sec:Pilot} discusses our early implementation with one of the calendar systems called Booked and Section~\ref{Sec:Conclusions} concludes with our planned future work.  
 
 % NOTES AND SNIPPET TEXT THAT WAS NO LONGER RELEVANT
 %In 2012, a \textit{vm-deploy} script was developed to automate the process of launching a virtual machine from distributed Gfarm filesystem~\cite{gfarm) to an OpenNebula deployment.  , which later became \textit{pragma\_boot} in 2013, to automate the VM porting process from one cloud deployment to another~\cite{pragmaReport2012,pragmaReport2013}.  
@@ -79,7 +79,22 @@ In late 2014 during the PRAGMA27 workshop, a lightweight scheduler was proposed 
 
 \section{Scheduler Requirements}
 
-Sites willing to participate will have to install a PRAGMA Package - a very small set of components.
+PRAGMA had the following three key requirements for a cloud testbed scheduler:
+
+\textbf{Low participation overhead}:  One key requirement for the cloud testbed scheduler was that it be lightweight and require  minimal effort and minimal expertise for a site to add their cloud deployment to the list of schedulable resources.   Similarly the scheduler would need to work across multiple cloud deployment tools (e.g., Rocks, OpenNebula, and OpenStack~\cite{openstack}) so that sites do not have to learn and install one specific cloud deployment tool.  Sites  just need to run a SSH service and install the pragma\_boot package, which is a small Python package and can be installed via RPM and can be configured in less than an hour.
+
+\textbf{Easy to use}:  To execute a virtual cluster on the PRAGMA cloud testbed currently, users needs to contact each site individually to gain access to their cloud deployment, upload their images, and if pragma\_boot is not available, perform all the steps manually to launch their virtual cluster.   The design of the PRAGMA cloud scheduler should first simplify that process by ensuring pragma\_boot gets deployed more broadly and ported it to more cloud systems as needed.   The scheduler should also provide a simple Web interface for users to see the available resources at sites, construct their virtual cluster, and manage their images.
+
+\textbf{Scale to tens of users:}  While the PRAGMA community was composed of nineteen active institution sites in 2014, the number of expected users for the cloud testbed is in the tens of users, not hundreds nor thousands.  Therefore, our scheduler can be simplified and we can give high priority to the requirements of low participation overhead and easy of use.
+
+% enable varying -- time limited -- not get bogged down by deployment of technologies
+
+% view available resources and scientific application virtual machines
+\section{Scheduler Design}
+\label{Sec:Design}
+
+
+
 Users can request access to resources similar to requesting a room (i.e., a room reservation system)
 PCC would be used to automatically start and monitor user's VMs slash VC via pragma\_boot up at sites 
 Only support 10s of users
@@ -89,11 +104,22 @@ Repeat longer version of text in abstract with appropriate citations.
 
 Discuss requirements and technologies like pragma boot, etc.
 
-% enable varying -- time limited -- not get bogged down by deployment of technologies
 
-% view available resources and scientific application virtual machines
-\section{Scheduler Design}
-\label{Sec:Design}
+ENT
+one controller at participating site
+way to slice switch? specialized controller? 
+AutoVFlow by Hiroaki Yamanaka (NICT)
+For users interested in running VMs, cloud middleware (OpenStack, CloudStack, etc) should take care of the slicing.
+ Recurring problem: users tend to forget and leave idle VMs running.
+For users interested in cloud middleware research/development, and/or access to bare-metal hardware (e.g., ENT), scheduling of resources and coordination among users will be needed.
+Network slicing technologies (Auto-VFlow, FlowVisor, FlowSpace Firewall, etc) when deployed could help
+Use PBS as a scheduler (or Condor or Slurm?)
+Nimbus have a module that interfaces with PBS
+ Use PBS to schedule interactive sessions on bare metal
+Use a shared calendar so that users can make resource reservations (`a la Grid?5000)
+ORCA from GENI/Planetlab? 
+Leases
+
 
 Discuss process of narrowing down scheduler design from meeting ideas 
 (e.g., batch scheduler, Grid 5000, GENI, Google doc, DHCP leases).
@@ -114,7 +140,9 @@ Discuss creation of Cloud Scheduler Pilot.
 Some interesting conclusion.
 
 %ACKNOWLEDGMENTS are optional
-%\section{Acknowledgments}
+\section{Acknowledgments}
+
+Thank Mauricio and Jose.
 
 \bibliographystyle{abbrv}
 \bibliography{paper}  
