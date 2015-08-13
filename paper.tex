@@ -79,53 +79,33 @@ In late 2014 during the PRAGMA27 workshop, a lightweight scheduler was proposed 
 
 \section{Scheduler Requirements}
 
-PRAGMA had the following three key requirements for a cloud testbed scheduler:
+PRAGMA had the following three key requirements for a cloud testbed scheduler to enable multiple users access to the resources at a time:
 
 \textbf{Low participation overhead}:  One key requirement for the cloud testbed scheduler was that it be lightweight and require  minimal effort and minimal expertise for a site to add their cloud deployment to the list of schedulable resources.   Similarly the scheduler would need to work across multiple cloud deployment tools (e.g., Rocks, OpenNebula, and OpenStack~\cite{openstack}) so that sites do not have to learn and install one specific cloud deployment tool.  Sites  just need to run a SSH service and install the pragma\_boot package, which is a small Python package and can be installed via RPM and can be configured in less than an hour.
 
 \textbf{Easy to use}:  To execute a virtual cluster on the PRAGMA cloud testbed currently, users needs to contact each site individually to gain access to their cloud deployment, upload their images, and if pragma\_boot is not available, perform all the steps manually to launch their virtual cluster.   The design of the PRAGMA cloud scheduler should first simplify that process by ensuring pragma\_boot gets deployed more broadly and ported it to more cloud systems as needed.   The scheduler should also provide a simple Web interface for users to see the available resources at sites, construct their virtual cluster, and manage their images.
 
-\textbf{Scale to tens of users:}  While the PRAGMA community was composed of nineteen active institution sites in 2014, the number of expected users for the cloud testbed is in the tens of users, not hundreds nor thousands.  Therefore, our scheduler can be simplified and we can give high priority to the requirements of low participation overhead and easy of use.
+\textbf{Scale to tens of users:}  While the PRAGMA community was composed of nineteen active institution sites in 2014, the number of expected users for the cloud testbed is in the tens of users, not hundreds nor thousands.  Therefore, we can prioritize simplicity over scalability and give higher priority to the requirements of low participation overhead and easy of use.
 
-% enable varying -- time limited -- not get bogged down by deployment of technologies
-
-% view available resources and scientific application virtual machines
 \section{Scheduler Design}
 \label{Sec:Design}
 
+In our design discussions, we first looked at the below existing solutions that could be adapted for PRAGMA's scheduling needs:
 
+\textbf{Existing HPC schedulers}:  Open source batch schedulers like Slurm~\cite{slurm}, TORQUE~\cite{torque}, and HTCondor are commonly used in  HPC to manage space shared resources.  While these batch schedulers  are widely used, they either do not work across multiple sites (TORQUE) or are too heavy weight for what PRAGMA needs, requiring custom configuration and multiple daemons at each site (Slurm and HTCondor).  Furthermore, PRAGMA users change over time and we wanted a low barrier to entry like a simple Web based interface for scheduling, rather than the command-line tools and queue abstractions that these batch schedulers provide.
 
-Users can request access to resources similar to requesting a room (i.e., a room reservation system)
-PCC would be used to automatically start and monitor user's VMs slash VC via pragma\_boot up at sites 
-Only support 10s of users
+\textbf{Grid'5000:}   NEEDS TO BE WRITTEN.  Add short description of Grid'5000.  They use OAR which is a batch scheduler similar to above and the calendar gui called GridPrems is one of three options for interacting with Grid'5000.  A key difference is that testbed resources are dedicated rather than like on PRAGMA where they could be shared;  I believe also single admin model.  Interesting set of tools.  We can say we liked their calendar approach the best.
 
+\textbf{DHCP Leases:}  NEEDS TO BE WRITTEN.
 
-Repeat longer version of text in abstract with appropriate citations.
+\textbf{GENI/PlanetLab}:  NEEDS TO BE WRITTEN.  ORCA
 
-Discuss requirements and technologies like pragma boot, etc.
+Out of these approaches, we liked the Grid'5000 calendar reservation interface, GridPrems, for scheduling the best.  The calendar reservation scheduling is an interface that all users are familiar with in their everyday lives and would be well suited to the different PRAGMA users who have varying levels of cloud expertise.  
 
-
-ENT
-one controller at participating site
-way to slice switch? specialized controller? 
-AutoVFlow by Hiroaki Yamanaka (NICT)
-For users interested in running VMs, cloud middleware (OpenStack, CloudStack, etc) should take care of the slicing.
- Recurring problem: users tend to forget and leave idle VMs running.
-For users interested in cloud middleware research/development, and/or access to bare-metal hardware (e.g., ENT), scheduling of resources and coordination among users will be needed.
-Network slicing technologies (Auto-VFlow, FlowVisor, FlowSpace Firewall, etc) when deployed could help
-Use PBS as a scheduler (or Condor or Slurm?)
-Nimbus have a module that interfaces with PBS
- Use PBS to schedule interactive sessions on bare metal
-Use a shared calendar so that users can make resource reservations (`a la Grid?5000)
-ORCA from GENI/Planetlab? 
-Leases
-
-
-Discuss process of narrowing down scheduler design from meeting ideas 
-(e.g., batch scheduler, Grid 5000, GENI, Google doc, DHCP leases).
-
-\section{Calendaring systems}
+\section{Calendar systems}
 \label{Sec:Calendars}
+
+In addition to GridPrems interface, we decided to look at other calendar reservation systems. 
 
 Discuss selection of Booked.
 
@@ -142,7 +122,7 @@ Some interesting conclusion.
 %ACKNOWLEDGMENTS are optional
 \section{Acknowledgments}
 
-Thank Mauricio and Jose.
+The authors would like to thank Jose Fortes and Mauricio Tsugawa for their help during our initial design discussions and for providing resources at University of Florida during development.
 
 \bibliographystyle{abbrv}
 \bibliography{paper}  
