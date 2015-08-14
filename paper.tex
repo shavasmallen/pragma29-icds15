@@ -47,13 +47,14 @@ PRAGMA is a community of research scientists and institutions from around the Pa
 \keywords{Cloud, Scheduling, Resource Sharing, Virtualization} % NOT required for Proceedings
 
 \section{Introduction}
+\label{Sec:intro}
 
 The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) researches actively collaborate to enable scientific expeditions in areas of computational chemistry, telescience, biodiversity, and lake ecology~\cite{pragmaWeb}.  Founded in 2002, PRAGMA originally sought to advance the use of grid technologies in applications among a community of investigators working with leading institution sites around the Pacific Rim~\cite{pragmaReport2004}.  This included the deployment of a shared PRAGMA Grid testbed where participating sites could contribute and use resources as needed to develop and test new middleware and to conduct scientific experiments.  Testbed sites needed to install at a minimum Globus~\cite{globus} and a local HPC job scheduler as well as other optional software such as MPICH-G2~\cite{mpichg2} and Ninf-G~\cite{ninfg}.  In November 2006, nineteen sites in thirteen countries were part of the testbed.  By 2009, the testbed had grown to twenty-seven sites in fifteen countries with a total of 1008 CPUs, more than 1.3 terabytes of memory, and over 24.7 terabytes of online storage.  However, as of 2011, the number of sites started to decline and maintaining the numerous and complex middleware and scientific applications at each local site required significant people effort and expertise.  Since PRAGMA participants often have varying levels of of funding, staff, and expertise, PRAGMA started to shift away from grid towards cloud technologies to simplify the infrastructure and to lower the amount of effort any site would need to participate in the testbed.  
 
 The first phase of the PRAGMA cloud testbed started with three sites and focused around the creation of application-specific virtual machines and making them portable to  different cloud hosting environments like Rocks~\cite{rocks}, OpenNebula~\cite{opennebula}, and Eucalyptus~\cite{eucalyptus}.
 One early example was an AutoDock~\cite{autodock} virtual cluster created for the Avian Flu Grid research team in 2011~\cite{pragmaReport2011}.   By 2012, the cloud testbed had ten sites with a total of 367 CPUs, 2.5 terabytes of memory, and 657 terabytes of online storage.  In 2013 PRAGMA shifted its  focus to the creation and management of virtual clusters to make it easier for users to assemble a multi-node virtual environment for running their scientific experiments.  The following technologies have been explored to facilitate the operation and use of virtual clusters on the PRAGMA cloud testbed.
 
-\textbf{Pragma\_boot:}  rather than requiring a single cloud system at all sites, PRAGMA encourages the sites to  deploy any virtualization technology that best fits their expertise. However, enabling a virtual cluster to be ported to different cloud hosting environment is a complex problem and requires tooling to retain the cluster relationship between head and worker nodes as well as software configurations.  In 2013, three pilot sites (UCSD, AIST, NCHC) developed a script for an automated virtual cluster porting and demonstrated the same virtual cluster image being booted in three different cloud hosting environments, including Rocks/Xen, OpenNebula/KVM, and Amazon EC2.  Based on those experiences, the porting script was redesigned and reimplemented as \textit{pragma\_boot} toolkit with "drivers" to support  virtual cluster migration to virtual environments enabled on Rocks and OpenNebula clusters.
+\textbf{Pragma\_boot:}  rather than requiring a single cloud system at all sites, PRAGMA encourages the sites to  deploy any virtualization technology that best fits their expertise. However, enabling a virtual cluster to be ported to different cloud hosting environment is a complex problem and requires tooling to retain the cluster relationship between head and worker nodes as well as software configurations.  In 2013, three pilot sites (UCSD, AIST, NCHC) developed a script for an automated virtual cluster porting and demonstrated the same virtual cluster image being booted in three different cloud hosting environments, including Rocks/Xen, OpenNebula/KVM, and Amazon EC2.  Based on those experiences, the porting script was redesigned and reimplemented as \textit{pragma\_boot} toolkit with "drivers" to support  virtual cluster migration to virtual environments enabled on Rocks and OpenNebula clusters.  In 2014, a feature was added to pragma\_boot to download and boot virtual cluster images from Amazon CloudFront~\cite{cloudfront}.
 
 \textbf{Personal Cloud Controller:}  to provide users with an easy-to-use interface for managing the life cycle of their virtual clusters, a Personal Cloud Controller (PCC)  was started in 2014. This lightweight tool was designed to manage startup, status monitoring, and shutdown of a virtual cluster and was built on top of pragma\_boot and a well-known resource and workload management system HTCondor~\cite{condor}.   PCC also provided an option to create a multi-site virtual cluster leveraging an open-source virtual network overlay software IPOP~\cite{ipop} for creating its private network.
 
@@ -82,8 +83,6 @@ In late 2014 during the PRAGMA27 workshop, a lightweight scheduler was proposed 
 PRAGMA had the following three key requirements for a cloud testbed scheduler to enable multiple users access to the resources at a  given time:
 
 \textbf{Low participation overhead}:  One key requirement for the cloud testbed scheduler was that it had to be lightweight and required  minimal effort and minimal expertise for a site to add their cloud deployment to the list of resources available for scheduling.   Similarly, the scheduler would need to work across multiple cloud deployments (e.g., Rocks, OpenNebula, and OpenStack~\cite{openstack}) so that sites do not have to learn and install specific cloud deployment tools in addition to their currently used.  
-
-NOTE THE FOLLOWING IS A PART OF AN IMPLEMENTATION NOT A REQUIREMENT, MOVE TO DIFFERENT SECTION THAT DESCRIBES IMPLEMENTATION: Sites  just need to run a SSH service and install the pragma\_boot package, which is a small Python package and can be installed via RPM and can be configured in less than an hour.
 
 \textbf{Easy to use}:  Currently, to execute a virtual cluster on the PRAGMA cloud testbed, users needs to contact each site individually to gain access to their cloud deployment, upload their images, and launch their virtual cluster either using pragma\_boot  if it is available or manually via a sequence of defined steps.   The design of the PRAGMA cloud scheduler should first simplify this process by ensuring that pragma\_boot gets deployed more broadly and port it to more cloud environments as needed.   The scheduler should also provide a simple Web interface for users to see the available resources and sites, construct their virtual cluster, and manage their images.
 
@@ -179,7 +178,53 @@ Started looking at  one of them, Tuleap, may be too big for what we need.
 \section{Cloud Scheduler Pilot}
 \label{Sec:Pilot}
 
+One key requirement for our cloud scheduler was to enable users to start and manage virtual clusters on the PRAGMA cloud testbed with minimal effort. 
+The basic workflow of how a user would start a virtual cluster and the steps are summarized below:
+
+\begin{enumerate}
+\item A user does a general search for available resources based on the number of CPUs, memory size, and networking configuration (i.e., IPOP, ViNE, or PRAGMA-ENT) that is needed.  
+\item Available resources that fit the criteria are displayed to the user and their availability is shown in a calendar layout.  
+\item The user selects the subset of resources they want, the timeframe, virtual cluster image, and configuration details and submits it to the Cloud scheduler.  Once the reservation is verified and confirmed, the user will get an email confirmation.  
+\item When the reservation is ready to be activated, the cloud scheduler will use PCC and pragma\_boot to launch the virtual cluster, automatically configure the private and public network configuration on the virtual cluster nodes, and email the user when it's ready for them to login.   
+\end{enumerate}
+
+Figure~\ref{Fig:Flow} shows the above steps in a use case sequence diagram where \textit{PRAGMA Booking} refers to our customized Booked instance.  PCC will monitor the health of the virtual cluster and when the reservation is close to expiring, will notify the user in case they want to extend their reservation.  Otherwise, when the time expires or the user chooses to end their reservation, the virtual cluster will be shut down.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=\columnwidth]{figures/flow.pdf}
+\caption{The flow of a user request to start a virtual cluster and the components that are involved in the cloud scheduler.}
+\label{Fig:Flow}
+\end{center}
+\end{figure}
+
+The other key requirement for the cloud scheduler was that it should require minimal effort for a PRAGMA sites to participate in the PRAGMA testbed.  Therefore, we opted for a simple client-server architecture, where the client is a small PRAGMA package that interfaces to a site's local cloud system.  Currently, the PRAGMA Package is just a SSH service and the pragma\_boot package, which is a small Python package that can be installed via RPM and can be configured in less than an hour.  The server component is composed of the PRAGMA Booking interface and the PCC which gets launched for per user.  The architecture for the PRAGMA cloud scheduler is shown in Figure~\ref{Fig:Arch}.
+
+In our pilot implementation of the cloud scheduler, we made a number of temporary assumptions to simplify the design.
+
+\begin{itemize}
+\item Only one reservation can be made per resource.  While we made several changes in our pilot to customize the look of Booked, modifying it to allow for multiple reservations per resource would have required deeper changes that we wanted to defer to a later version.   
+\item Virtual cluster images are already available at each site.  For our pilot, we worked with a small number of virtual cluster images and pre-installed them to each cloud system so they were readily accessible by pragma\_boot.  We had the following three images: 1) a basic SGE Rocks virtual cluster, 2) an AutoDoc virtual cluster, and 3) a Lifemapper compute virtual cluster.   
+\item Since PCC is also under active development and was not easy to install, we used a simple stub to substitute for its functionality.  The stub is a small Python script called \textit{pcc-check-reservations} that polls PRAGMA Booking via its REST interface and looked for reservations that are ready to be activated.  Once it finds a reservation that need sto be activated, it launched pragma\_boot via SSH.  It does not  monitor the virtual cluster nor email the user when their reservation is about to expire.  
+\item Only single site virtual clusters can be launched.  So far, we've only experimented with multi-site virtual clusters using IPOP and this requires the virtual cluster images to be pre-installed with IPOP and an automated configure script that will assign private IP addresses to each node on boot.  For Rocks virtual clusters, there is a Rocks roll~\cite{ipoproll} that will automate the IPOP installation and install the configure scripts.  
+\end{itemize}
+
+
+cloud scheduler would leverage 
+To create a lightweight scheduler that enabled users to start and manage virtual clusters on leveraged the pragma\_boot, PCC, and software-defined networking tools that had been developed as part of PRAGMA 
+As 
+Our 
+To schedule virtual clusters on the PRAGMA cloud testbed, 
 Discuss creation of Cloud Scheduler Pilot.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=\columnwidth]{figures/arch.pdf}
+\caption{Architecture for the PRAGMA cloud scheduler.}
+\label{Fig:Arch}
+\end{center}
+\end{figure}
+
 
 \section{Conclusions and Future Work}
 \label{Sec:Conclusions}
