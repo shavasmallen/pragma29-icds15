@@ -32,7 +32,8 @@ Nadya Williams\\
 
 \maketitle
 \begin{abstract}
-PRAGMA is a community of research scientists and institutions from around the Pacific Rim that work together to enable scientific expeditions in areas of biodiversity distribution and lake ecology.  Over the past four years, the technology focus for PRAGMA partners has shifted to cloud and software defined networking as enabling technologies.  During PRAGMA 27 meeting, the Resources Working Group discussed rebooting the persistent PRAGMA Testbed as a way for sites to contribute and use shared resources, leveraging technologies such as PRAGMA Boot, Personal Cloud Controller (PCC), and virtual network overlays (i.e. IPOP and ViNe).  To make PRAGMA resource sharing easier, a lightweight scheduler was proposed and discussed as a way to enable access to the resources and to manage resources reservations.  This short paper discusses the design process and initial prototype of a simple cloud scheduler for PRAGMA.  
+PRAGMA is a community of research scientists and institutions from around the Pacific Rim that work together to enable scientific expeditions in areas of biodiversity distribution and lake ecology.  Over the past four years, the technology focus for PRAGMA's testbed has shifted to cloud and software defined networking as enabling technologies.  This short paper describes the design of a simple cloud scheduler built on top of a Web reservation system that will enable users to easily run and manage virtual clusters for their science.   It is also equally important that there be a low barrier to entry for PRAGMA institutions to become part of the PRAGMA cloud testbed and install the needed software.  Therefore, the cloud scheduler  has a simple client-server architecture and will be built upon existing technologies such as pragma\_boot, Personal Cloud Controller,  virtual network overlays (e.g.,. IPOP), and  and also a Web reservation system.  We discuss our experiences implementing our pilot cloud scheduler and then describe future work.   
+
 
 %add contribute and leverage shared resources
 \end{abstract}
@@ -56,7 +57,7 @@ One early example was an AutoDock~\cite{autodock} virtual cluster created for th
 
 \textbf{Pragma\_boot:}  rather than requiring a single cloud system at all sites, PRAGMA encourages the sites to  deploy any virtualization technology that best fits their expertise. However, enabling a virtual cluster to be ported to different cloud hosting environment is a complex problem and requires tooling to retain the cluster relationship between head and worker nodes as well as software configurations.  In 2013, three pilot sites (UCSD, AIST, NCHC) developed a script for an automated virtual cluster porting and demonstrated the same virtual cluster image being booted in three different cloud hosting environments, including Rocks/Xen, OpenNebula/KVM, and Amazon EC2.  Based on those experiences, the porting script was redesigned and reimplemented as \textit{pragma\_boot} toolkit with "drivers" to support  virtual cluster migration to virtual environments enabled on Rocks and OpenNebula clusters.  In 2014, a feature was added to pragma\_boot to download and boot virtual cluster images from Amazon CloudFront~\cite{cloudfront}.
 
-\textbf{Personal Cloud Controller:}  to provide users with an easy-to-use interface for managing the life cycle of their virtual clusters, a Personal Cloud Controller (PCC)  was started in 2014. This lightweight tool was designed to manage startup, status monitoring, and shutdown of a virtual cluster and was built on top of pragma\_boot and a well-known resource and workload management system HTCondor~\cite{condor}.   PCC also provided an option to create a multi-site virtual cluster leveraging an open-source virtual network overlay software IPOP~\cite{ipop} for creating its private network.
+\textbf{Personal Cloud Controller:}  to provide users with an easy-to-use interface for managing the life cycle of their virtual clusters, a Personal Cloud Controller (PCC)  was started in 2014. This lightweight tool was designed to manage startup, status monitoring, and shutdown of a virtual cluster and was built on top of pragma\_boot and a well-known resource and workload management system HTCondor~\cite{condor}.   PCC also provided an option to create a multi-site virtual cluster leveraging an open-source virtual network overlay software IPOP~\cite{ipop} for creating its private network.  
 
 \textbf{Software-Defined Networking}:   PRAGMA began investigating software-defined networking technologies such as OpenFlow~\cite{openflow} in 2013 as a way to create a private network between multi-site virtual clusters and to protect access to sensitive datasets~\cite{pragmaReport2013}.  PRAGMA then created the Experimental Network Testbed (PRAGMA-ENT) as a breakable, international testbed for use by PRAGMA researchers and collaborators.  In 2014, The PRAGMA-ENT team worked to create an international reliable direct point-to-point data Layer-2 connection with network engineers and developed AutoVFlow~\cite{autovflow} that allows to provision private virtual network slices for each application, user, and/or project~\cite{pragmaReport2014}.  
 
@@ -93,74 +94,15 @@ PRAGMA had the following three key requirements for a cloud testbed scheduler to
 
 In our design discussions, we first looked at some existing solutions that might be adapted for PRAGMA's scheduling needs.  Open source batch schedulers like Slurm~\cite{slurm}, TORQUE~\cite{torque}, or HTCondor, are used to manage space shared resources.  There are also other testbeds like Grid'5000~\cite{grid5000},  GENI~\cite{geni}, and PlanetLab~\cite{planetlab} that have their own tools for using and managing their infrastructure. In general, we found these tools had different goals and were too heavy weight for PRAGMA.  Some tools were better documented than others but all had a fairly high learning curve and would have been non-trivial to adapt for PRAGMA's cloud testbed, which had a strong application and virtual cluster focus.
 
-We next looked more broadly for a simpler approach to scheduling and found a number of Web-based calendar reservation systems that seemed promising.  These systems were designed to manage meeting room reservations, hotel room reservations, or equipment rentals.   Their interfaces would be also be familiar to users in their everyday lives and thus well suited to the different PRAGMA users who have varying levels of distributed systems and networking expertise.  Also, several of these tools were significantly less complex than the batch and testbed scheduling tools above.  Later, we found a Web-based calendar reservation system called GridPrems~\cite{gridprems} for Grid'5000 indicating a simpler interface was sometimes needed even for their users.
+We next looked more broadly for a simpler approach to scheduling and found a number of open source Web-based calendar reservation systems that seemed promising.  These systems were designed to manage meeting room reservations, hotel room reservations, or equipment rentals.   Their interfaces would be also be familiar to users in their everyday lives and thus well suited to the different PRAGMA users who have varying levels of distributed systems and networking expertise.  Also, several of these tools were significantly less complex than the batch and testbed scheduling tools above.  Later, we found a Web-based calendar reservation system called GridPrems~\cite{gridprems} for Grid'5000 indicating a simpler interface was sometimes needed even for their users.
 
-%Some of the calendar reservation systems we looked at like Reservations~\cite{drupalreservations}, Merci~\cite{merci}, and Booking\_calendar~\cite{wordpressbooking} were plugins for Drupal~\cite{drupal} or Wordpress~\cite{wordpresss}.  However, the majority of tools were PHP based with a relational database backend like the Meeting Room Booking System~\cite{mrbs}, Booked~\cite{booked}, and Classroombookings~\cite{classroombookings}.  
+Some of the calendar reservation systems we looked at like Reservations~\cite{drupalreservations}, Merci~\cite{merci}, and Booking\_calendar~\cite{wordpressbooking} were plugins for Drupal~\cite{drupal} or Wordpress~\cite{wordpress}.  However, the majority of tools were PHP based with a relational database backend like the Meeting Room Booking System~\cite{mrbs}, Booked~\cite{booked}, and Classroombookings~\cite{classroombookings}.  For each system, we evaluated 1) how easy it would be to manage resources, reservations, and users as well as add new fields and features, 2) the GUI interface with respect to intuitive menus/navigation as well as a clean, modern, and uncluttered look, and 3)  how easy it was to install and setup a demo instance. One deficiency that all systems had was that they only allowed one reservation per resource.
 
-Since we were primarily interested in a scheduler with a like GridPrems, we decided to look at other open source calendar reservation systems that were available.  We looked at several systems used primarily for tracking room and/or equipment reservations and evaluated the following criteria:
-
-\textbf{Open Source and customizable:}  Open source software is generally preferable because it provides it is free to use and can be customized as needed.  Since we did not know of any existing Web interfaces for managing virtual clusters, we limited our search to customizable Open Source tools and evaluated how easy it would be to manage resources and users as well as add new fields and features. 
-
-\textbf{Nice GUI interface:}  We evaluated the GUI interfaces of several calendar reservation tools and looked for those that had intuitive menus and navigation and  a clean and uncluttered look.  Some of the GUI interfaces we looked at just used basic HTML tags and looked very clunky so we limited our search to tools that leveraged CSS and Javascript and looked more professional.   
-
-\textbf{Installation and maintenance:}  We downloaded a number of tools and reviewed their installation instructions to see how easy they were to setup a demo instance.  Most of the tools we looked at were developed in PHP and had a relational database backend that was could be served from a basic  Apache web server\~cite{apache} setup.   A few of the tools were plugins for Drupal.  However, we eliminated a number of tools because they had either too little documentation or complex installation instructions with several manual steps.   
-
-Discuss selection of Booked.
-
-Open source
-Easy to setup
-Nice GUI interface
-Report features
-REST API
-Customizable-ish
-LDAP and Active Directory support.
-Fine tuned roles and permissions.
-User and group quotas.
-
-Can only handle one reservation per resource at a time
-PHP changes can be painful (heavy OO makes it hard to find right files)
-Doc is sparse
-
-http://mrbs.sourceforge.net
-	PHP, Postgres/MySQL
-	Demo was a bit slow and a bit clunky looking
-Booked - http://www.twinkletoessoftware.com/products
-	Nice interface, lot of customization features
-	PHP, MySQL
-	RESTFUL API
-http://classroombookings.com/
-	Nice interface
-	PHP, MySQL
-http://www.unitime.org/unitime\_intro.php
-	Geeky looking, might have some good algorithms
-	Interface not as smooth
-	http://journal.code4lib.org/articles/2941
-	Clunky looking
-http://www.drupalrooms.com
-	More for hotel web sites ? e.g., prices, etc.
-https://groups.drupal.org/node/137544
-	Merci - https://www.drupal.org/project/merci
-		For equipment, etc.
-	https://www.drupal.org/project/reservations
-		Also seems pretty flexible
-		
-		
- tried a few tools  here is the summary:
-1. OTA hotel management   http://rocks-86.sdsc.edu/hotelmis/setup/initialsetup.php
-    appears to be just for the hotel, no easy login, no easy change. Not useful
-2. Mybooking - in Malay and after changing the language and trying enenglishigsh i did not get far. -- hotel
-3. Booking\_calendar - strictly room booking, very small in features, too much to rewrite. -- wordpress plugin
-4 Optaplanner appears to be a java app that runs outside of web. I tried examples and i am
-   not sure of its usability. The examples are running producing sometimes some output sometimes noe
-   and they are just java apps on some data. The examples  are not impressive even in terms of giving
-   an idea how things are run. 
-
-A few more links are on http://opensource.com/business/15/1/top-project-management-tools-2015
-Started looking at  one of them, Tuleap, may be too big for what we need. 
+Out of the calendar reservation systems we evaluated, Booked~\cite{booked} from Twinkle Toes software seemed the best suited.  It was easy to setup, had  a nice looking GUI interface, and was customizable.  It also had some nice additional features like usage reporting, a REST API interface, LDAP and Active Directory support, fine grained roles and permissions, and user/group quotas.  After working with Booked during our pilot, we did find some weaknesses.  First, the documentation was a bit sparse in areas and any needed PHP changes were time consuming due to its heavily object-oriented structure (i.e., we had to go thru many files to find the right place to change the code). 
 
 
-\section{Cloud Scheduler Pilot}
-\label{Sec:Pilot}
+\section{Scheduler Architecture}
+\label{Sec:Arch}
 
 One key requirement for our cloud scheduler was to enable users to start and manage virtual clusters on the PRAGMA cloud testbed with minimal effort. 
 The basic workflow of how a user would start a virtual cluster and the steps are summarized below:
@@ -183,6 +125,17 @@ Figure~\ref{Fig:Flow} shows the above steps in a use case sequence diagram where
 \end{figure}
 
 The other key requirement for the cloud scheduler was that it should require minimal effort for PRAGMA sites to participate in the PRAGMA testbed.  Therefore, we opted for a simple client-server architecture, where the client is a small PRAGMA package that interfaces to a site's local cloud system.  Currently, the PRAGMA Package is just a SSH service and the pragma\_boot package, which is a small Python package that can be installed via RPM and can be configured in less than an hour.  The server component is composed of the PRAGMA Booking interface and the PCC which gets launched for per user.  The architecture for the PRAGMA cloud scheduler is shown in Figure~\ref{Fig:Arch}.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=\columnwidth]{figures/arch.pdf}
+\caption{Architecture for the PRAGMA cloud scheduler.}
+\label{Fig:Arch}
+\end{center}
+\end{figure}
+
+\section{Scheduler Pilot}
+\label{Sec:Pilot}
 
 In our pilot implementation of the cloud scheduler, we made a number of temporary assumptions to simplify the design.
 
@@ -233,27 +186,14 @@ Some sample screenshots of the PRAGMA Booking user interface is shown in Figure~
 \end{center}
 \end{figure*}
 
-
-cloud scheduler would leverage 
-To create a lightweight scheduler that enabled users to start and manage virtual clusters on leveraged the pragma\_boot, PCC, and software-defined networking tools that had been developed as part of PRAGMA 
-As 
-Our 
-To schedule virtual clusters on the PRAGMA cloud testbed, 
-Discuss creation of Cloud Scheduler Pilot.
-
-\begin{figure}[htbp]
-\begin{center}
-\includegraphics[width=\columnwidth]{figures/arch.pdf}
-\caption{Architecture for the PRAGMA cloud scheduler.}
-\label{Fig:Arch}
-\end{center}
-\end{figure}
-
-
 \section{Conclusions and Future Work}
 \label{Sec:Conclusions}
 
-Some interesting conclusion.
+This paper described the the design and pilot implementation of a  scheduler for the PRAGMA cloud testbed.  Since the scheduler does not need to scale beyond tens of users, we prioritized ease of use and low installation/maintenance overhead and opted for a simple client-server design.  The server has an intuitive Web GUI frontend based on the Booked Web reservation system software.  
+
+The pilot implementation of the cloud scheduler made a lot of temporary assumptions and so our future work addresses them.  We will first enhance the Booked software to handle multiple reservations and then work on integrating IPOP and PRAGMA-ENT into the cloud scheduler as well.  Next, we will rework the PCC software and integrate HTCondor so it's used in personal mode allowing us to keep a light footprint on each of the PRAGMA sites.  Finally, we will investigate using the CloudFront option in pragma\_boot to manage application virtual cluster images and staging to each of the sites.     Documentation and packaging will also be done throughout so that new users and sites can get quickly onto the PRAGMA cloud testbed and use it as an experimental service to test new science and infrastructure tools..  
+
+
 
 %ACKNOWLEDGMENTS are optional
 \section{Acknowledgments}
