@@ -105,9 +105,74 @@ Out of these approaches, we liked the Grid'5000 calendar reservation interface, 
 \section{Calendar systems}
 \label{Sec:Calendars}
 
-In addition to GridPrems interface, we decided to look at other calendar reservation systems. 
+Since we were primarily interested in a scheduler with a Web based calendar reservation interface like GridPrems, we decided to look at other open source calendar reservation systems that were available.  We looked at several systems used primarily for tracking room and/or equipment reservations and evaluated the following criteria:
+
+\textbf{Open Source and customizable:}  Open source software is generally preferable because it provides it is free to use and can be customized as needed.  Since we did not know of any existing Web interfaces for managing virtual clusters, we limited our search to customizable Open Source tools and evaluated how easy it would be to manage resources and users as well as add new fields and features. 
+
+\textbf{Nice GUI interface:}  We evaluated the GUI interfaces of several calendar reservation tools and looked for those that had intuitive menus and navigation and  a clean and uncluttered look.  Some of the GUI interfaces we looked at just used basic HTML tags and looked very clunky so we limited our search to tools that leveraged CSS and Javascript and looked more professional.   
+
+\textbf{Installation and maintenance:}  We downloaded a number of tools and reviewed their installation instructions to see how easy they were to setup a demo instance.  Most of the tools we looked at were developed in PHP and had a relational database backend that was could be served from a basic  Apache web server\~cite{apache} setup.   A few of the tools were plugins for Drupal.  However, we eliminated a number of tools because they had either too little documentation or complex installation instructions with several manual steps.   
+
+We searched for candidate reservation tools using Google search and also searching specifically on Github and SourceForge.  The above criteria filtered out several tools.  
+
+One category of tools we looked at were plugins to existing frameworks like Drupal~\cite{drupal} and Wordpress\~cite{wordpress}.  We looked at Booking_calendar for Wordpress as well as Merci and Reservations for Drupal   
+One category of tools that we looked at were developed in PHP and had a relational backend database such as Postgres an MySQL.  We looked at Meeting Room Booking System on SourceForge~\cite{mrbs}, Booked from Twinkle Toes Software, and Classroombookings on Github, 
+
+
 
 Discuss selection of Booked.
+
+Open source
+Easy to setup
+Nice GUI interface
+Report features
+REST API
+Customizable-ish
+LDAP and Active Directory support.
+Fine tuned roles and permissions.
+User and group quotas.
+
+Can only handle one reservation per resource at a time
+PHP changes can be painful (heavy OO makes it hard to find right files)
+Doc is sparse
+
+http://mrbs.sourceforge.net
+	PHP, Postgres/MySQL
+	Demo was a bit slow and a bit clunky looking
+Booked - http://www.twinkletoessoftware.com/products
+	Nice interface, lot of customization features
+	PHP, MySQL
+	RESTFUL API
+http://classroombookings.com/
+	Nice interface
+	PHP, MySQL
+http://www.unitime.org/unitime\_intro.php
+	Geeky looking, might have some good algorithms
+	Interface not as smooth
+	http://journal.code4lib.org/articles/2941
+	Clunky looking
+http://www.drupalrooms.com
+	More for hotel web sites ? e.g., prices, etc.
+https://groups.drupal.org/node/137544
+	Merci - https://www.drupal.org/project/merci
+		For equipment, etc.
+	https://www.drupal.org/project/reservations
+		Also seems pretty flexible
+		
+		
+ tried a few tools  here is the summary:
+1. OTA hotel management   http://rocks-86.sdsc.edu/hotelmis/setup/initialsetup.php
+    appears to be just for the hotel, no easy login, no easy change. Not useful
+2. Mybooking - in Malay and after changing the language and trying enenglishigsh i did not get far. -- hotel
+3. Booking_calendar - strictly room booking, very small in features, too much to rewrite. -- wordpress plugin
+4 Optaplanner appears to be a java app that runs outside of web. I tried examples and i am
+   not sure of its usability. The examples are running producing sometimes some output sometimes noe
+   and they are just java apps on some data. The examples  are not impressive even in terms of giving
+   an idea how things are run. 
+
+A few more links are on http://opensource.com/business/15/1/top-project-management-tools-2015
+Started looking at  one of them, Tuleap, may be too big for what we need. 
+
 
 \section{Cloud Scheduler Pilot}
 \label{Sec:Pilot}
