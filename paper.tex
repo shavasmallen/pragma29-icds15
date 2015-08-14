@@ -3,7 +3,7 @@
 \usepackage{url}
 
 \begin{document}
-
+\sloppy %gets rid of word overrun in some columns
 \title{Experiences designing and building a PRAGMA Cloud Scheduler}
 \subtitle{[Short Paper]}
 
@@ -91,35 +91,19 @@ PRAGMA had the following three key requirements for a cloud testbed scheduler to
 \section{Scheduler Design}
 \label{Sec:Design}
 
-In our design discussions, we first looked at some existing solutions that might be adapted for PRAGMA's scheduling needs.  We 
+In our design discussions, we first looked at some existing solutions that might be adapted for PRAGMA's scheduling needs.  Open source batch schedulers like Slurm~\cite{slurm}, TORQUE~\cite{torque}, or HTCondor, are used to manage space shared resources.  There are also other testbeds like Grid'5000~\cite{grid5000},  GENI~\cite{geni}, and PlanetLab~\cite{planetlab} that have their own tools for using and managing their infrastructure. In general, we found these tools had different goals and were too heavy weight for PRAGMA.  Some tools were better documented than others but all had a fairly high learning curve and would have been non-trivial to adapt for PRAGMA's cloud testbed, which had a strong application and virtual cluster focus.
 
-\textbf{Existing HPC schedulers}:  Open source batch schedulers like Slurm~\cite{slurm}, TORQUE~\cite{torque}, and HTCondor are commonly used in  HPC to manage distributed  shared resources.  While these batch schedulers  are widely used, they either do not work across multiple sites (TORQUE) or are too heavy weight for what PRAGMA needs, requiring custom configuration and multiple daemons at each site (Slurm and HTCondor).  Furthermore, to be adopted by PRAGMA users who are scientists in many different domains,  we wanted a low barrier to entry like a simple Web based interface for scheduling, rather than the command-line tools and queue abstractions that these batch schedulers provide.
+We next looked more broadly for a simpler approach to scheduling and found a number of Web-based calendar reservation systems that seemed promising.  These systems were designed to manage meeting room reservations, hotel room reservations, or equipment rentals.   Their interfaces would be also be familiar to users in their everyday lives and thus well suited to the different PRAGMA users who have varying levels of distributed systems and networking expertise.  Also, several of these tools were significantly less complex than the batch and testbed scheduling tools above.  Later, we found a Web-based calendar reservation system called GridPrems~\cite{gridprems} for Grid'5000 indicating a simpler interface was sometimes needed even for their users.
 
-\textbf{Grid'5000:}   NEEDS TO BE WRITTEN.  Add short description of Grid'5000.  They use OAR which is a batch scheduler similar to above and the calendar gui called GridPrems is one of three options for interacting with Grid'5000.  A key difference is that testbed resources are dedicated rather than like on PRAGMA where they could be shared;  I believe also single admin model.  Interesting set of tools.  We can say we liked their calendar approach the best.
+%Some of the calendar reservation systems we looked at like Reservations~\cite{drupalreservations}, Merci~\cite{merci}, and Booking\_calendar~\cite{wordpressbooking} were plugins for Drupal~\cite{drupal} or Wordpress~\cite{wordpresss}.  However, the majority of tools were PHP based with a relational database backend like the Meeting Room Booking System~\cite{mrbs}, Booked~\cite{booked}, and Classroombookings~\cite{classroombookings}.  
 
-\textbf{DHCP Leases:}  NEEDS TO BE WRITTEN.
-
-\textbf{GENI/PlanetLab}:  NEEDS TO BE WRITTEN.  ORCA
-
-Out of these approaches, we liked the Grid'5000 calendar reservation interface, GridPrems, for scheduling the best.  The calendar reservation scheduling is an interface that all users are familiar with in their everyday lives and would be well suited to the different PRAGMA users who have varying levels of cloud expertise.  
-
-\section{Calendar systems}
-\label{Sec:Calendars}
-
-Since we were primarily interested in a scheduler with a Web based calendar reservation interface like GridPrems, we decided to look at other open source calendar reservation systems that were available.  We looked at several systems used primarily for tracking room and/or equipment reservations and evaluated the following criteria:
+Since we were primarily interested in a scheduler with a like GridPrems, we decided to look at other open source calendar reservation systems that were available.  We looked at several systems used primarily for tracking room and/or equipment reservations and evaluated the following criteria:
 
 \textbf{Open Source and customizable:}  Open source software is generally preferable because it provides it is free to use and can be customized as needed.  Since we did not know of any existing Web interfaces for managing virtual clusters, we limited our search to customizable Open Source tools and evaluated how easy it would be to manage resources and users as well as add new fields and features. 
 
 \textbf{Nice GUI interface:}  We evaluated the GUI interfaces of several calendar reservation tools and looked for those that had intuitive menus and navigation and  a clean and uncluttered look.  Some of the GUI interfaces we looked at just used basic HTML tags and looked very clunky so we limited our search to tools that leveraged CSS and Javascript and looked more professional.   
 
 \textbf{Installation and maintenance:}  We downloaded a number of tools and reviewed their installation instructions to see how easy they were to setup a demo instance.  Most of the tools we looked at were developed in PHP and had a relational database backend that was could be served from a basic  Apache web server\~cite{apache} setup.   A few of the tools were plugins for Drupal.  However, we eliminated a number of tools because they had either too little documentation or complex installation instructions with several manual steps.   
-
-We searched for candidate reservation tools using Google search and also searching specifically on Github and SourceForge.  The above criteria filtered out several tools.  
-
-One category of tools we looked at were plugins to existing frameworks like Drupal~\cite{drupal} and Wordpress\~cite{wordpress}.  We looked at Booking\_calendar for Wordpress as well as Merci and Reservations for Drupal   
-One category of tools that we looked at were developed in PHP and had a relational backend database such as Postgres an MySQL.  We looked at Meeting Room Booking System on SourceForge~\cite{mrbs}, Booked from Twinkle Toes Software, and Classroombookings on Github, 
-
-
 
 Discuss selection of Booked.
 
@@ -208,7 +192,7 @@ In our pilot implementation of the cloud scheduler, we made a number of temporar
 
 \textbf{Developed and used a PCC stub:}  Since PCC is also under active development and was not easy to install, we used a simple stub to substitute for its functionality.  The stub is a small Python script called \textit{pcc-check-reservations} that polls PRAGMA Booking via its REST interface and looked for reservations that are ready to be activated.  Once it finds a reservation that need sto be activated, it launches pragma\_boot via SSH.  It does not  monitor the virtual cluster nor email the user when their reservation is about to expire.  
 
-\textbf{Only single site virtual clusters can be launched:}  So far, we've only experimented with multi-site virtual clusters using IPOP and this requires the virtual cluster images to be pre-installed with IPOP and an automated configure script that will assign private IP addresses to each node on boot.  For Rocks virtual clusters, there is a Rocks roll~\cite{ipoproll} that will automate the IPOP installation and install the configure scripts.  
+\textbf{Only single site virtual clusters can be launched:}  So far, we've only experimented with multi-site virtual clusters using IPOP and this requires the virtual cluster images to be pre-installed with IPOP and an automated configure script that will assign private IP addresses to each node on boot.  For Rocks virtual clusters, there is a Rocks roll~\cite{ipoproll} that will automate the IPOP installation and install the configure scripts.  Since IPOP is installed at the user-level, it can be used by any PRAGMA site but some sites may support better performing network overlays created with ViNE~\cite{vine} or software-defined networking tools.  Therefore, our long-term goal is to automatically select the most appropriate network overlay depending on the sites that a user wants to include in their virtual cluster where IPOP is the lowest common denominator.
 
 Much of our work in this pilot focused on creating the PRAGMA Booking interface.  This required the following customizations to Booked:
 
