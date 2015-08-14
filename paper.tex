@@ -91,7 +91,7 @@ PRAGMA had the following three key requirements for a cloud testbed scheduler to
 \section{Scheduler Design}
 \label{Sec:Design}
 
-In our design discussions, we first looked at the existing solutions that could be adapted for PRAGMA's scheduling needs:
+In our design discussions, we first looked at some existing solutions that might be adapted for PRAGMA's scheduling needs.  We 
 
 \textbf{Existing HPC schedulers}:  Open source batch schedulers like Slurm~\cite{slurm}, TORQUE~\cite{torque}, and HTCondor are commonly used in  HPC to manage distributed  shared resources.  While these batch schedulers  are widely used, they either do not work across multiple sites (TORQUE) or are too heavy weight for what PRAGMA needs, requiring custom configuration and multiple daemons at each site (Slurm and HTCondor).  Furthermore, to be adopted by PRAGMA users who are scientists in many different domains,  we wanted a low barrier to entry like a simple Web based interface for scheduling, rather than the command-line tools and queue abstractions that these batch schedulers provide.
 
@@ -198,16 +198,56 @@ Figure~\ref{Fig:Flow} shows the above steps in a use case sequence diagram where
 \end{center}
 \end{figure}
 
-The other key requirement for the cloud scheduler was that it should require minimal effort for a PRAGMA sites to participate in the PRAGMA testbed.  Therefore, we opted for a simple client-server architecture, where the client is a small PRAGMA package that interfaces to a site's local cloud system.  Currently, the PRAGMA Package is just a SSH service and the pragma\_boot package, which is a small Python package that can be installed via RPM and can be configured in less than an hour.  The server component is composed of the PRAGMA Booking interface and the PCC which gets launched for per user.  The architecture for the PRAGMA cloud scheduler is shown in Figure~\ref{Fig:Arch}.
+The other key requirement for the cloud scheduler was that it should require minimal effort for PRAGMA sites to participate in the PRAGMA testbed.  Therefore, we opted for a simple client-server architecture, where the client is a small PRAGMA package that interfaces to a site's local cloud system.  Currently, the PRAGMA Package is just a SSH service and the pragma\_boot package, which is a small Python package that can be installed via RPM and can be configured in less than an hour.  The server component is composed of the PRAGMA Booking interface and the PCC which gets launched for per user.  The architecture for the PRAGMA cloud scheduler is shown in Figure~\ref{Fig:Arch}.
 
 In our pilot implementation of the cloud scheduler, we made a number of temporary assumptions to simplify the design.
 
+\textbf{Only one reservation can be made per resource:}  While we made several changes in our pilot to customize the look of Booked, modifying it to allow for multiple reservations per resource would have required deeper changes that we wanted to defer to a later version.   
+
+\textbf{Virtual cluster images are already available at each site:}  For our pilot, we worked with a small number of virtual cluster images and pre-installed them to each cloud system so they were readily accessible by pragma\_boot.  We had the following three images: 1) a basic SGE Rocks virtual cluster, 2) an AutoDoc virtual cluster, and 3) a Lifemapper~\cite{lifemapper} compute virtual cluster.   
+
+\textbf{Developed and used a PCC stub:}  Since PCC is also under active development and was not easy to install, we used a simple stub to substitute for its functionality.  The stub is a small Python script called \textit{pcc-check-reservations} that polls PRAGMA Booking via its REST interface and looked for reservations that are ready to be activated.  Once it finds a reservation that need sto be activated, it launches pragma\_boot via SSH.  It does not  monitor the virtual cluster nor email the user when their reservation is about to expire.  
+
+\textbf{Only single site virtual clusters can be launched:}  So far, we've only experimented with multi-site virtual clusters using IPOP and this requires the virtual cluster images to be pre-installed with IPOP and an automated configure script that will assign private IP addresses to each node on boot.  For Rocks virtual clusters, there is a Rocks roll~\cite{ipoproll} that will automate the IPOP installation and install the configure scripts.  
+
+Much of our work in this pilot focused on creating the PRAGMA Booking interface.  This required the following customizations to Booked:
+
 \begin{itemize}
-\item Only one reservation can be made per resource.  While we made several changes in our pilot to customize the look of Booked, modifying it to allow for multiple reservations per resource would have required deeper changes that we wanted to defer to a later version.   
-\item Virtual cluster images are already available at each site.  For our pilot, we worked with a small number of virtual cluster images and pre-installed them to each cloud system so they were readily accessible by pragma\_boot.  We had the following three images: 1) a basic SGE Rocks virtual cluster, 2) an AutoDoc virtual cluster, and 3) a Lifemapper compute virtual cluster.   
-\item Since PCC is also under active development and was not easy to install, we used a simple stub to substitute for its functionality.  The stub is a small Python script called \textit{pcc-check-reservations} that polls PRAGMA Booking via its REST interface and looked for reservations that are ready to be activated.  Once it finds a reservation that need sto be activated, it launched pragma\_boot via SSH.  It does not  monitor the virtual cluster nor email the user when their reservation is about to expire.  
-\item Only single site virtual clusters can be launched.  So far, we've only experimented with multi-site virtual clusters using IPOP and this requires the virtual cluster images to be pre-installed with IPOP and an automated configure script that will assign private IP addresses to each node on boot.  For Rocks virtual clusters, there is a Rocks roll~\cite{ipoproll} that will automate the IPOP installation and install the configure scripts.  
+\item Added a custom field for a public SSH key text  to the user profile.  When PCC launches a virtual cluster, it will pull the user's public SSH key from their profile and give it to pragma\_boot so that the user can login as root once the virtual cluster is launched.   
+\item Added custom fields for CPU count, amount of memory per host, and virtual cluster image name to reservations.
+\item Added custom fields for CPU count, amount of memory per host, site hostname, and ENT-enabled to resources.
+\item Added a numeric count as a custom field type.  Booked only provided text matching on search so if a host had 16 CPUs available and the user requested 8 CPUs, the search would fail since "16" != "8".  By adding count as a custom field type, the search would do a numeric comparison on the values and the search would succeed since 8 <= 16.
+\item Added custom reservation statuses: "Starting", "Running", and "Stopping".  Each reservation status is shown as a different color in  the calendar view.
+\item Added the ability to retrieve and set the reservation status from the Booked REST API.  	
+\item Added the PRAGMA logo to the header.
 \end{itemize}
+
+We also fixed the following bugs in Booked and plan to work with the developer to integrate them back into the distribution:
+
+\begin{itemize}
+\item Fixed bug that allowed users from making reservations for past time frames.
+\item Fixed a time conversion bug that was preventing updates to existing reservations.
+\item Fixed bug where the username was getting set to a blank value when a reservation was updated via the REST API. 
+\item Fixed bug that would not recognize zero as a valid value (e.g., specifying a virtual cluster with just a frontend and 0 compute nodes).  
+\end{itemize}
+
+Some sample screenshots of the PRAGMA Booking user interface is shown in Figure~\ref{Fig:Booked}.  Likewise, Figure~\ref{Fig:Reports} shows some screenshots of the administrations options and usage reports.  Our customizations for Booked were packaged into a Rocks roll~\cite{cloudscheduler}, which automates its installation and publishes some sample data.
+
+\begin{figure*}[htbp]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/bookedReservationScreenshot.pdf}
+\caption{Screenshots of the PRAGMA Booking user interface showing how a user can view and filter resources, view reservation summaries, and create a new reservation.}
+\label{Fig:Booked}
+\end{center}
+\end{figure*}
+
+\begin{figure*}[htbp]
+\begin{center}
+\includegraphics[width=\textwidth]{figures/bookedReportScreenshot.pdf}
+\caption{Screenshots of the PRAGMA Booking admin and reporting interface showing where an administrator can edit configuration details and then view usage reports.}
+\label{Fig:Reports}
+\end{center}
+\end{figure*}
 
 
 cloud scheduler would leverage 
