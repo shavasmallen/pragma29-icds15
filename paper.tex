@@ -110,7 +110,7 @@ One key requirement for our cloud scheduler was to enable users to create and ma
 The basic workflow and steps for how a user would start a virtual cluster are summarized below:
 
 \begin{enumerate}
-\item A user does a general search for available resources based on the number of CPUs, memory size, and networking configuration (i.e., IPOP, ViNE~\cite{vine}, or PRAGMA-ENT) that is needed.  
+\item A user does a general search for available resources based on the number of CPUs, memory size, and networking configuration (e.g., IPOP, ViNE~\cite{vine}, or PRAGMA-ENT) that is needed.  
 \item Available resources that fit the criteria are displayed to the user and their availability is shown in a calendar layout.  
 \item The user selects the subset of  desired resources, the timeframe, virtual cluster image, and configuration details and submits it to the Cloud scheduler.  Once the reservation is verified and confirmed, the user will get an email confirmation.  
 \item When the reservation is ready to be activated, the cloud scheduler will use PCC and pragma\_boot to launch the virtual cluster, automatically configure the private and public network configuration on the virtual cluster nodes, and email the user when the reconfigured cluster is ready.   
@@ -172,7 +172,7 @@ We also fixed the following bugs in Booked and plan to work with the developer t
 
 Some sample screenshots of the PRAGMA Booking user interface are shown in Figure~\ref{Fig:Booked}.  Likewise, Figure~\ref{Fig:Reports} shows some screenshots of the administrations options and usage reports.  We created a  Booked Rocks roll~\cite{cloudscheduler} which packages the software with our customizations and automates its installation and publishing of sample data.
 
-\begin{figure*}[htbp]
+\begin{figure*}[htbp] 
 \begin{center}
 \includegraphics[width=\textwidth]{figures/bookedReservationScreenshot.pdf}
 \caption{Screenshots of the PRAGMA Booking user interface showing how a user can view and filter resources, view reservation summaries, and create a new reservation.}
