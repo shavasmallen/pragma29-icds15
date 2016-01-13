@@ -1,43 +1,42 @@
-\documentclass{acm_proc_article-sp}
+\documentclass[times]{cpeauth}
 
+\usepackage{moreverb}
 \usepackage{url}
 
+\usepackage[dvips,colorlinks,bookmarksopen,bookmarksnumbered,citecolor=red,urlcolor=red]{hyperref}
+
+\newcommand\BibTeX{{\rmfamily B\kern-.05em \textsc{i\kern-.025em b}\kern-.08em
+T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\def\volumeyear{2010}
+
 \begin{document}
+
+\runningheads{A.~N.~Other}{A demonstration of the \journalabb\
+class file}
+
 \sloppy %gets rid of word overrun in some columns
+
 \title{Lightweight Scheduling for the PRAGMA Cloud Testbed} 
 
+\author{Shava Smallen\affil{1}\corrauth, Nadya Williams\affil{1}, Philip Papadopoulos\affil{1}}
 
-\numberofauthors{3} 
+\address{\affilnum{1}San Diego Supercomputer Center\break
+University of California San Diego, 9500 Gilman Drive, La Jolla, CA 92093}\break
 
-\author{
-% 1st author      
-\alignauthor
-Shava Smallen\\
-      \affaddr{University of California, San Diego}\\
-      \affaddr{9500 Gilman Dr., MC 0505}\\
-      \affaddr{La Jolla, CA 92093, USA}\\
-       \email{ssmallen@sdsc.edu}
-% 2nd. author
-\alignauthor
-Nadya Williams\\
-      \affaddr{University of California, San Diego}\\
-      \affaddr{9500 Gilman Dr., MC 0505}\\
-      \affaddr{La Jolla, CA 92093, USA}\\
-       \email{nadya@sdsc.edu}
-\and % 3rd. author
-\alignauthor Philip Papadopoulos \\
-      \affaddr{University of California, San Diego}\\
-      \affaddr{9500 Gilman Dr., MC 0505}\\
-      \affaddr{La Jolla, CA 92093, USA}\\
-       \email{phil@sdsc.edu}
-%\and  % use '\and' if you need 'another row' of author names
-}
+\corraddr{University of California San Diego, 9500 Gilman Drive, La Jolla, CA 92093. E-mail: ssmallen@sdsc.edu}
 
-\maketitle
 \begin{abstract}
 The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community of research scientists and institutions from around the Pacific Rim that work together to enable scientific expeditions in areas such as biodiversity distribution and lake ecology.  PRAGMA's members collaborate on a testbed infrastructure and over the past four years, the technology focus has shifted to cloud and software defined networking as enabling technologies.  This short paper describes the design of a web-based cloud scheduler reservation system that will enable users to easily run and manage virtual clusters for their science.  Based on a client-server architecture, the cloud scheduler was designed so that it requires minimal installation and and management effort for participating PRAGMA testbed sites.   The PRAGMA cloud scheduler is built using a web-based room reservation tool called Booked and leverages several PRAGMA technologies such as pragma\_boot, Personal Cloud Controller,  and virtual network overlays (e.g., IPOP, ViNe).  We discuss our implementation of the pilot cloud scheduler and then describe future work.   
 %add contribute and leverage shared resources
 \end{abstract}
+
+\keywords{Cloud, Scheduling, Resource Sharing, Virtualization} % NOT required for Proceedings
+
+\maketitle
+
+\vspace{-6pt}
+
 
 % A category with the (minimum) three required fields
 %\category{H.4}{Information Systems Applications}{Miscellaneous}
@@ -46,7 +45,6 @@ The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community
 
 %terms{Cloud, Scheduling, Resource Sharing}
 
-\keywords{Cloud, Scheduling, Resource Sharing, Virtualization} % NOT required for Proceedings
 
 \section{Introduction}
 \label{Sec:intro}
@@ -120,7 +118,7 @@ Figure~\ref{Fig:Flow} shows the above steps in a use case sequence diagram where
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=\columnwidth]{figures/flow.pdf}
+\includegraphics[width=\columnwidth]{figures/flow.ps}
 \caption{The flow of a user request to start a virtual cluster and the components that are involved in the cloud scheduler.}
 \label{Fig:Flow}
 \end{center}
@@ -130,7 +128,7 @@ The other key requirement for the cloud scheduler was that it should require min
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=\columnwidth]{figures/arch.pdf}
+\includegraphics[width=.75\columnwidth]{figures/arch.ps}
 \caption{Architecture for the PRAGMA cloud scheduler.}
 \label{Fig:Arch}
 \end{center}
@@ -141,8 +139,6 @@ The other key requirement for the cloud scheduler was that it should require min
 
 In our pilot implementation of the cloud scheduler, we made a number of temporary assumptions to simplify the design.
 
-\textbf{Only one reservation can be made per resource:}  While we made several changes in our pilot to customize the look of Booked, further modifications to allow for multiple reservations per resource would have required deeper changes that we wanted to defer to a later time.   
-
 \textbf{Virtual cluster images are already available at each site:}  For our pilot, we worked with a small number of virtual cluster images and pre-installed them to each cloud system so they were readily accessible by pragma\_boot.  We had the following three images: 1) a basic SGE Rocks virtual cluster; 2) an AutoDock virtual cluster;  3) a Lifemapper~\cite{lifemapper} compute virtual cluster.   
 
 \textbf{Developed and used a PCC stub:}  Since PCC is also under active development and was not easy to install, we used a simple stub to substitute for its functionality.  The stub is a small Python script called \textit{pcc-check-reservations} that polls PRAGMA Booking via its REST interface and monitors reservations.  Once it finds a reservation that needs to be activated, it launches pragma\_boot via SSH.  It does not  monitor the virtual cluster nor does it email the users when their reservation are about to expire.  
@@ -152,6 +148,7 @@ In our pilot implementation of the cloud scheduler, we made a number of temporar
 Much of our work in this pilot focused on creating the PRAGMA Booking interface.  This required the following customizations to Booked:
 
 \begin{itemize}
+\item Added the ability to make multiple reservations on a resource per time slot to allow more than one virtual cluster to run simultaneously on a site.   This was the most extensive change we made to Booked.  Fortunately, no changes were needed to the backend database but it required several changes to the GUI code to allow an additional reservation to be made on a resource and to display multiple reservations per time slot in the calendar views.  In total, enhancements were made to seven PHP files and two template files.
 \item Added a custom field for a public SSH key  to the user profile.  When PCC launches a virtual cluster, it will pull the public SSH key from the user's  profile and give it to pragma\_boot so that the user can login as root once the virtual cluster is launched.   The ability to use a root login is not required for all but can be needed in some case if users want to do system modifications. A user with a root login has a full ownership of the virtual cluster. 
 \item Added custom fields for CPU count, amount of memory per host, and virtual cluster image name to the reservation specification.
 \item Added custom fields for CPU count, amount of memory per host, site hostname, and ENT capability (enabled, disabled) to the resource specification.
@@ -174,7 +171,7 @@ Some sample screenshots of the PRAGMA Booking user interface are shown in Figure
 
 \begin{figure*}[htbp] 
 \begin{center}
-\includegraphics[width=\textwidth]{figures/bookedReservationScreenshot.pdf}
+\includegraphics[width=\textwidth]{figures/bookedReservationScreenshot.eps}
 \caption{Screenshots of the PRAGMA Booking user interface showing how a user can view and filter resources, view reservation summaries, and create a new reservation.}
 \label{Fig:Booked}
 \end{center}
@@ -182,7 +179,7 @@ Some sample screenshots of the PRAGMA Booking user interface are shown in Figure
 
 \begin{figure*}[htbp]
 \begin{center}
-\includegraphics[width=\textwidth]{figures/bookedReportScreenshot.pdf}
+\includegraphics[width=\textwidth]{figures/bookedReportScreenshot.eps}
 \caption{Screenshots of the PRAGMA Booking admin and reporting interface showing where an administrator can edit configuration details and then view usage reports.}
 \label{Fig:Reports}
 \end{center}
@@ -193,7 +190,7 @@ Some sample screenshots of the PRAGMA Booking user interface are shown in Figure
 
 This paper described the the design and pilot implementation of a  scheduler for the PRAGMA cloud testbed.  Since the scheduler does not need to scale beyond tens of users, we prioritized ease of use and low installation and maintenance overhead and opted for a simple client-server design.  The server has an intuitive web GUI frontend based on the Booked web reservation system software.  
 
-In the pilot implementation of the cloud scheduler  we made a lot of temporary assumptions, and  our future work will address them.  We will first enhance the Booked software to handle multiple reservations and then work on integrating IPOP and PRAGMA-ENT into the cloud scheduler.  Next, we will rework the PCC software and integrate HTCondor so it's used in personal mode allowing us to keep a light footprint on each of the PRAGMA sites.  Finally, we will investigate using the CloudFront option in pragma\_boot to manage application virtual cluster images and staging them to each of the sites.     We will package and document the resulting software so that new users and sites can get quickly onto the PRAGMA cloud testbed and use it as an experimental service to test new science and infrastructure tools.
+In the pilot implementation of the cloud scheduler  we made a lot of temporary assumptions, and  our future work will address them.  We will first work on integrating IPOP and PRAGMA-ENT into the cloud scheduler.  Next, we will rework the PCC software and integrate HTCondor so it's used in personal mode allowing us to keep a light footprint on each of the PRAGMA sites.  Finally, we will investigate using the CloudFront option in pragma\_boot to manage application virtual cluster images and staging them to each of the sites.     We will package and document the resulting software so that new users and sites can get quickly onto the PRAGMA cloud testbed and use it as an experimental service to test new science and infrastructure tools.
 
 
 %ACKNOWLEDGMENTS are optional
