@@ -109,7 +109,10 @@ The basic workflow and steps for how a user would start a virtual cluster are su
 \begin{enumerate}
 \item A user does a general search for available resources based on the number of CPUs, memory size, and networking configuration (e.g., IPOP, ViNE~\cite{vine}, or PRAGMA-ENT) that is needed.  
 \item Available resources that fit the criteria are displayed to the user and their availability is shown in a calendar layout.  
-\item The user selects the desired resources, the timeframe, virtual cluster image, and configuration details and submits them to the Cloud scheduler.  Once the reservation is verified and confirmed, the user will get an email confirmation.  Otherwise if there is a problem with the reservation such as someone else has taken the resources while the user was filling in the reservation fields, the user will get notified immediately of the failure once they hit the submit button or later via email.
+\item The user selects the desired resources, the timeframe, virtual cluster image, and configuration details and submits them to the Cloud scheduler.
+Once the reservation is verified and confirmed, the user will get an email confirmation.  In the event two users try to reserve the same resource 
+the same time, for example, one user has taken the resources while the second user was filling in the reservation fields, the second user will get 
+a failure notification after hitting the submit button, and later via email.
 \item When the reservation is ready to be activated, the cloud scheduler will use PCC and pragma\_boot to launch the virtual cluster, automatically configure the private and public network configuration on the virtual cluster nodes, and email the user when the reconfigured cluster is ready.   
 \end{enumerate}
 
@@ -152,7 +155,9 @@ Much of our work in this pilot focused on creating the PRAGMA Booking interface.
 \item Added custom fields for CPU count, amount of memory per host, and virtual cluster image name to the reservation specification.
 \item Added custom fields for CPU count, amount of memory per host, site hostname, and ENT capability (enabled, disabled) to the resource specification.
 \item Added a numeric count as a custom field type.  Booked only provided text matching on search so if a host had 16 CPUs available and the user requested 8 CPUs, the search would fail per "16" != "8" inequality.  By adding count as a custom field type, the search would do a numeric comparison on the values and the search would succeed for "8 \textless= 16".
-\item Added virtual cluster statuses: "Starting", "Running", and "Stopping".  Each virtual cluster status is shown as a different color in  the calendar view.  "Starting" means it has been accepted by the scheduler and is being started up on the local cloud systems, "Running" means that the resources are available for the user to log into, and "Stopping" means the virtual cluster is being shutdown and is no longer available for log in.
+\item Added virtual cluster statuses: "Starting", "Running", and "Stopping".  Each virtual cluster status is shown as a different color in  the
+calendar view.  "Starting" means the virtual cluster has been accepted by the scheduler and is being started up on the local cloud system, "Running"
+means that the virtual cluster is available for the user to log into, and "Stopping" means the virtual cluster is scheduled for shutdown and is no longer available for log in.
 \item Added the ability to retrieve and set the reservation status from the Booked REST API.  	
 \item Added the PRAGMA logo to the header.
 \end{itemize}
@@ -166,7 +171,11 @@ We also fixed the following bugs in Booked and plan to work with the developer t
 \item Fixed bug that would not recognize zero as a valid value (e.g., specifying a virtual cluster with just a frontend and 0 compute nodes).  
 \end{itemize}
 
-We still need to address the scenario where two users might try to reserve the same resources at the same time as a race condition is possible.  Booked does not have are not any locking mechanisms in place currently that would handle two simultaneous user requests for the same resources gracefully and so this will need to be added in the future.    We also are not handling hardware failures at resource sites so when a  virtual cluster goes down; the failure would be recorded but we cannot accommodate relocation.  For fault tolerance of the cloud scheduler, we will deploy a backup instance somewhere else so that we can failover in the event of an outage.
+We still need to address the race condition scenario where two users might try to reserve the same resources at the same time.  Booked currently 
+does not have any mechanisms in place that can handle two simultaneous user requests for the same resources gracefully. 
+The solution will need to be added in the future.  We also do not handle hardware failures at resource sites. When a virtual 
+cluster goes down the failure will be recorded but we cannot accommodate a cluster relocation.  For fault tolerance of the cloud scheduler, we will
+deploy a backup instance at a differnt site so that we can do a cloud scheduler server failover.
 
 Some sample screenshots of the PRAGMA Booking user interface are shown in Figure~\ref{Fig:Booked}.  Likewise, Figure~\ref{Fig:Reports} shows some screenshots of the administrations options and usage reports.  We created a  Booked Rocks roll~\cite{cloudscheduler} which packages the software with our customizations and automates its installation and publishing of sample data.
 
@@ -191,9 +200,17 @@ Some sample screenshots of the PRAGMA Booking user interface are shown in Figure
 
 This paper described the the design and pilot implementation of a  scheduler for the PRAGMA cloud testbed.  Since the scheduler does not need to scale beyond tens of users, we prioritized ease of use and low installation and maintenance overhead and opted for a simple client-server design.  The server has an intuitive web GUI frontend based on the Booked web reservation system software.  
 
-In the pilot implementation of the cloud scheduler  we made a lot of simplifying assumptions, and  our future work will address them.  Currently,  the startup latency from a virtual cluster reservation to its availability to the user has not been analyzed in detail but we observed it is on the order of tens of minutes for our pilot implementation.   This user latency has multiple factors such as the underlying virtualization manager and load on the physical system where the virtual cluster is instantiated. There is additional latency if the cluster image is not available on the site as it will need to be downloaded from a remote repository and processed to make it available on the site. While this applies only for the first virtual cluster instantiation, it can add a considerable time  latency  depending on the cluster image size and the network speed from the site to the remote repository.   
+In the pilot implementation of the cloud scheduler  we made a lot of simplifying assumptions, and  our future work will address them.  
+Currently, the virtual cluster startup latency from the reservation to its availability to the user has not been analyzed in detail; but we observed
+it is on the order of tens of minutes.   Multiple factors influence this latency, such as the underlying virtualization manager and load on the
+physical system where the virtual cluster is instantiated. There is additional latency if the cluster image is not available on the site as it will
+need to be downloaded from a remote repository and processed to make it available on the site. While this applies only to the first virtual cluster instantiation, it can add a considerable time  latency  depending on the cluster image size and the network speed from the site to the remote repository.   
 
-In the future when we deploy on more sites, we can gather statistics on the cloud scheduler's usability and user experiences with virtual clusters startup latencies in addition to its applicability to different scenarios.   We will also work on integrating IPOP and PRAGMA-ENT into the cloud scheduler.  Next, we will rework the PCC software and integrate HTCondor so it's used in personal mode allowing us to keep a light footprint on each of the PRAGMA sites.  Finally, we will investigate using the CloudFront option in pragma\_boot to manage application virtual cluster images and staging them to each of the sites.     We will package and document the resulting software so that new users and sites can get quickly onto the PRAGMA cloud testbed and use it as an experimental service to test new science and infrastructure tools.
+In the future when we use deployment on more sites, we can gather statistics on the cloud scheduler's usability and user experiences with virtual
+clusters startup latencies in addition to its applicability to different scenarios.   We will also work on integrating IPOP and PRAGMA-ENT into the
+cloud scheduler.  Next, we will rework the PCC software and integrate HTCondor so it is used in personal mode allowing us to keep a light footprint on
+each of the PRAGMA sites.  Finally, we will investigate using the CloudFront option in pragma\_boot to manage application-specific  virtual cluster
+images and staging them to the sites.     We will package and document the resulting software so that new users can quickly start using the PRAGMA cloud testbed as an experimental service to test new science and infrastructure tools.
 
 
 %ACKNOWLEDGMENTS are optional
