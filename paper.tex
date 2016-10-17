@@ -26,7 +26,9 @@ University of California San Diego, 9500 Gilman Drive, La Jolla, CA 92093}\break
 \corraddr{University of California San Diego, 9500 Gilman Drive, La Jolla, CA 92093. E-mail: ssmallen@sdsc.edu}
 
 \begin{abstract}
-The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community of research scientists and institutions from around the Pacific Rim that work together to enable scientific expeditions in areas such as biodiversity distribution and lake ecology.  PRAGMA's members collaborate on a testbed infrastructure and over the past four years, the technology focus has shifted to cloud and software defined networking as enabling technologies.  This paper describes the design of a web-based cloud scheduler reservation system that enables users to easily run and manage virtual clusters for their science.  Based on a client-server architecture, the cloud scheduler was designed so that it requires minimal installation and and management effort for participating PRAGMA testbed sites.   The PRAGMA cloud scheduler is built using a web-based room reservation tool called Booked and leverages several PRAGMA technologies such as pragma\_boot, Personal Cloud Controller,  and virtual network overlays (e.g., IPOP, ViNe).  We discuss our implementation of the pilot cloud scheduler and then describe future work.   
+The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community of research scientists and institutions from around the Pacific Rim that work together to enable scientific expeditions in areas such as biodiversity distribution and lake ecology.  PRAGMA's members collaborate on a testbed infrastructure and over the past four years, the technology focus has shifted to cloud and software defined networking as enabling technologies.  This paper describes the design of a web-based cloud scheduler reservation system that enables users to easily run and manage virtual clusters for their science.  Based on a client-server architecture, the cloud scheduler is designed to require minimal installation and management effort for participating PRAGMA testbed sites.   
+%remove duplicate "and"; make present tense, simple substitution of enables
+The PRAGMA cloud scheduler is built using a web-based room reservation tool called Booked and leverages several PRAGMA technologies such as pragma\_boot, Personal Cloud Controller,  and virtual network overlays (e.g., IPOP, ViNe).  We discuss our implementation of the pilot cloud scheduler and then describe future work.   
 %add contribute and leverage shared resources
 \end{abstract}
 
@@ -48,9 +50,13 @@ The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) is a community
 \section{Introduction}
 \label{Sec:intro}
 
-The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) researchers actively collaborate to enable scientific expeditions in areas of computational chemistry, telescience, biodiversity, and lake ecology~\cite{pragmaWeb}.  Founded in 2002, PRAGMA originally sought to advance the use of grid technologies for applications among a community of investigators working with leading institution sites around the Pacific Rim~\cite{pragmaReport2004}.  This included the deployment of a shared PRAGMA Grid testbed where participating sites could contribute and use resources as needed to develop and test new middleware and to conduct scientific experiments.  Testbed sites needed to install at a minimum the Globus toolkit~\cite{globus}, a local HPC job scheduler as well as other optional software such as MPICH-G2~\cite{mpichg2} and Ninf-G~\cite{ninfg}.  In November 2006, nineteen sites in thirteen countries were part of the testbed.  By 2009, the testbed had grown to twenty-seven sites in fifteen countries with a total of 1008 CPUs, more than 1.3 terabytes of memory, and over 24.7 terabytes of online storage.  However, as of 2011, the number of sites started to decline and maintaining the numerous and complex middleware and scientific applications at each local site required significant people effort and expertise.  Since PRAGMA participants often have varying levels of of funding, staff, and expertise, PRAGMA started to shift away from grid towards cloud technologies to simplify the infrastructure and to lower the amount of effort any site would need to participate in the testbed.  
+The Pacific Rim Application and Grid Middleware Assembly (PRAGMA) researchers actively collaborate to enable scientific expeditions in areas of computational chemistry, telescience, biodiversity, and lake ecology~\cite{pragmaWeb}.  Founded in 2002, PRAGMA originally sought to advance the use of grid technologies for applications among a community of investigators working with leading institution sites around the Pacific Rim~\cite{pragmaReport2004}.  This included the deployment of a shared PRAGMA Grid testbed where participating sites could contribute and use resources as needed to develop and test new middleware and to conduct scientific experiments.  Testbed sites needed to install at a minimum the Globus toolkit~\cite{globus}, a local HPC job scheduler as well as other optional software such as MPICH-G2~\cite{mpichg2} and Ninf-G~\cite{ninfg}.  In November 2006, nineteen sites in thirteen countries were part of the testbed.  By 2009, the testbed had grown to twenty-seven sites in fifteen countries with a total of 1008 CPUs, more than 1.3 terabytes of memory, and over 24.7 terabytes of online storage.  However, as of 2011, the number of sites started to decline and maintaining the numerous and complex middleware and scientific applications at each local site required significant people effort and expertise.  Since PRAGMA participants often have varying levels of of funding, staff, and expertise, PRAGMA started to shift away from grid towards cloud technologies to simplify the infrastructure and to lower the amount of effort any site would need to expend to 
+%add "expend to"
+participate in the testbed.  
 
-The first phase of the PRAGMA cloud testbed started with three sites and focused around the creation of application-specific virtual machines and making them portable to  different cloud hosting environments like Rocks~\cite{rocks}, OpenNebula~\cite{opennebula}, and Eucalyptus~\cite{eucalyptus}.
+The first phase of the PRAGMA cloud testbed started with three sites and focused on
+%replace "around" with "on"
+ the creation of application-specific virtual machines and making them portable to  different cloud hosting environments like Rocks~\cite{rocks}, OpenNebula~\cite{opennebula}, and Eucalyptus~\cite{eucalyptus}.
 One early example in 2011 was an AutoDock virtual cluster created for the Avian Flu Grid research team~\cite{pragmaReport2011}.   By 2012, the cloud testbed had ten sites with a total of 367 CPUs, 2.5 terabytes of memory and 657 terabytes of online storage.  To make it easier for users to assemble a multi-node virtual environment for running their scientific experiments, PRAGMA shifted its  focus in 2013 to the creation and management of virtual clusters.  The following technologies have been explored to facilitate the operation and use of virtual clusters on the PRAGMA cloud testbed.
 
 % Decide to capitalize first word since http://www.quickanddirtytips.com/education/grammar/formatting-vertical-lists?page=2 indicates it's easier to capitalize
@@ -58,7 +64,9 @@ One early example in 2011 was an AutoDock virtual cluster created for the Avian 
 
 \textbf{Personal Cloud Controller:}  To provide researchers with an easy-to-use interface for managing the life cycle of their virtual clusters, a Personal Cloud Controller (PCC)  was started in 2014~\cite{pcc}. This lightweight tool was designed to manage startup, status monitoring, and shutdown of a virtual cluster and was built on top of pragma\_boot and a well-known resource and workload management system HTCondor~\cite{condor}.   PCC also provided an option to create a multi-site virtual cluster leveraging an open-source virtual network overlay software IPOP~\cite{ipop} for creating its private network.  
 
-\textbf{Software-Defined Networking}:   PRAGMA began investigating software-defined networking technologies such as OpenFlow~\cite{openflow} in 2013 as a way to create a private network among multi-site virtual clusters and to protect access to sensitive datasets.  PRAGMA then created the Experimental Network Testbed (PRAGMA-ENT) as a breakable, international testbed for use by PRAGMA researchers and collaborators.  In 2014, The PRAGMA-ENT team worked to create a reliable international Layer-2 connection with network engineers and developed AutoVFlow~\cite{autovflow} that can provision private virtual network slices for each application, user, and/or project~\cite{pragmaReport2014}.  
+\textbf{Software-Defined Networking}:   PRAGMA community members
+%add "community members"
+ began investigating software-defined networking technologies such as OpenFlow~\cite{openflow} in 2013 as a way to create a private network among multi-site virtual clusters and to protect access to sensitive datasets.  PRAGMA then created the Experimental Network Testbed (PRAGMA-ENT) as a breakable, international testbed for use by PRAGMA researchers and collaborators.  In 2014, the PRAGMA-ENT team worked to create a reliable international Layer-2 connection with network engineers and developed AutoVFlow~\cite{autovflow} that can provision private virtual network slices for each application, user, and/or project~\cite{pragmaReport2014}.  
 
 In late 2014 during the PRAGMA27 workshop, a lightweight scheduler was proposed to coordinate virtual hosts and clusters running on the different cloud deployments  and leveraging the above described technologies.  The next section discusses the general requirements of the cloud scheduler and Section~\ref{Sec:Design} discusses the design options that were considered.  The architecture of the cloud scheduler is provided in Section~\ref{Sec:Arch} and Section~\ref{Sec:Pilot} discusses our pilot implementation.  Section~\ref{Sec:Conclusions} concludes with our planned future work.  
 
@@ -80,11 +88,17 @@ In late 2014 during the PRAGMA27 workshop, a lightweight scheduler was proposed 
 
 \section{Scheduler Requirements}
 
-PRAGMA had the following three key requirements for a cloud testbed scheduler to enable multiple users to access the resources at a  given time:
+The PRAGMA resource providers
+%added "resource providers"
+ had the following three key requirements for a cloud testbed scheduler to enable multiple users to access the resources at a  given time:
 
-\textbf{Low participation overhead}:  One key requirement for the cloud testbed scheduler was that it had to be lightweight and required  minimal effort and minimal expertise for a site to add their cloud deployment to the list of resources available for scheduling.   Similarly, the scheduler would need to work across multiple cloud systems (e.g., Rocks, OpenNebula, and OpenStack~\cite{openstack}) so that sites do not have to learn and install additional cloud deployment tools. 
+\textbf{Low participation overhead}:  One key requirement for the cloud testbed scheduler was that it 
+%remove "had to"; change to present tense
+be lightweight and require  minimal effort and minimal expertise for a site to add their cloud deployment to the list of resources available for scheduling.   Similarly, the scheduler would need to work across multiple cloud systems (e.g., Rocks, OpenNebula, and OpenStack~\cite{openstack}) so that sites do not have to learn and install additional cloud deployment tools. 
 
-\textbf{Easy to use}:  Currently, to execute a virtual cluster on the PRAGMA cloud testbed, users needs to contact each site individually to gain access to their cloud deployment, upload their images, and launch their virtual cluster either using pragma\_boot  if it is available or manually via a sequence of defined steps.   The design of the PRAGMA cloud scheduler should first simplify this process by ensuring that pragma\_boot gets deployed more broadly and port it to more cloud systems as needed.   The scheduler should also provide a simple web interface for users to see the available resources and sites, construct their virtual cluster, and manage their images.
+\textbf{Easy to use}:  Currently, to execute a virtual cluster on the PRAGMA cloud testbed, users must
+%change "needs to" to "must"
+ contact each site individually to gain access to their cloud deployment, upload their images, and launch their virtual cluster either using pragma\_boot  if it is available or manually via a sequence of defined steps.   The design of the PRAGMA cloud scheduler should first simplify this process by ensuring that pragma\_boot gets deployed more broadly and port it to more cloud systems as needed.   The scheduler should also provide a simple web interface for users to see the available resources and sites, construct their virtual cluster, and manage their images.
 
 \textbf{Scale to tens of users:}  While the PRAGMA community was composed of nineteen active institution sites in 2014, the initial number of expected users for the cloud testbed is in the tens of users, not hundreds nor thousands.  Therefore, we can prioritize simplicity over scalability and give higher priority to the requirements of low participation overhead and ease of use.
 
@@ -198,17 +212,27 @@ Some sample screenshots of the PRAGMA Booking user interface are shown in Figure
 \section{Conclusions and Future Work}
 \label{Sec:Conclusions}
 
-This paper described the the design and pilot implementation of a  scheduler for the PRAGMA cloud testbed.  Since the scheduler does not need to scale beyond tens of users, we prioritized ease of use and low installation and maintenance overhead and opted for a simple client-server design.  The server has an intuitive web GUI frontend based on the Booked web reservation system software.  
+This paper describes the
+%present tense and remove extra "the"
+design and pilot implementation of a  scheduler for the PRAGMA cloud testbed.  Since the scheduler does not need to scale beyond tens of users, we prioritized ease of use, low installation and maintenance overhead, and thus opted for a simple client-server design. 
+%clarify what was prioritized
+The server has an intuitive web GUI front-end based on the Booked web reservation system software.  
 
-In the pilot implementation of the cloud scheduler  we made a lot of simplifying assumptions, and  our future work will address them.  
-Currently, the virtual cluster startup latency from the reservation to its availability to the user has not been analyzed in detail but we observed
-it is on the order of tens of minutes.   Multiple factors influence this latency, such as the underlying virtualization manager and load on the
+In the pilot implementation of the cloud scheduler  we made a lot of simplifying assumptions, and  our future work will address these.
+%these instead of them  
+Currently, the virtual cluster startup latency from the point in time of its reservation to its availability to the user has not been analyzed in detail but we observed
+it to be on the order of tens of minutes.   
+%clarify latency applied to
+Multiple factors influence this latency, such as the underlying virtualization manager and load on the
 physical system where the virtual cluster is instantiated. There is additional latency if the cluster image is not available on the site as it will
 need to be downloaded from a remote repository and processed to make it available on the site. While this applies only to the first virtual cluster instantiation, it can add a considerable time  latency  depending on the cluster image size and the network speed from the site to the remote repository.   
 
-In the future when the cloud scheduler is deployed to more sites, we can gather statistics on its usability and user experiences with virtual
+Once
+%"once" instead of "in the future"
+ the cloud scheduler is deployed to more sites, we can gather statistics on its usability and user experiences with virtual
 clusters startup latencies in addition to its applicability to different scenarios.   We will also work on integrating IPOP and PRAGMA-ENT into the
-cloud scheduler.  Next, we will rework the PCC software and integrate HTCondor so it is used in personal mode allowing us to keep a light footprint on
+cloud scheduler.  Next, we will rework the PCC software and integrate HTCondor so it is used in personal mode allowing us to keep a light footprint at
+%"at" instead of "on"
 each of the PRAGMA sites.  Finally, we will investigate using the remote repository option in pragma\_boot to manage application-specific  virtual cluster
 images and staging them to the sites.     We will package and document the resulting software so that new users can quickly start using the PRAGMA cloud testbed as an experimental service to test new science and infrastructure tools.
 
